@@ -1,43 +1,69 @@
 package net.ifmain.hwanultoktok.kmp
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
-
-import hwanultoktok.composeapp.generated.resources.Res
-import hwanultoktok.composeapp.generated.resources.compose_multiplatform
+import org.koin.compose.KoinApplication
+import org.koin.compose.koinInject
+import net.ifmain.hwanultoktok.kmp.di.commonModule
+import net.ifmain.hwanultoktok.kmp.di.platformModule
+import net.ifmain.hwanultoktok.kmp.presentation.ui.ExchangeRateScreen
+import net.ifmain.hwanultoktok.kmp.presentation.ui.AlertScreen
 
 @Composable
 @Preview
-fun App() {
+fun App(modifier: Modifier = Modifier) {
+    KoinApplication(application = {
+        modules(commonModule, platformModule)
+    }) {
+        HwanulTokTokApp(modifier)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HwanulTokTokApp(modifier: Modifier = Modifier) {
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
+        var selectedTabIndex by remember { mutableStateOf(0) }
+        
+        Scaffold(
+            modifier = modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = { Text("환율 톡톡") }
+                )
+            },
+            bottomBar = {
+                NavigationBar {
+                    NavigationBarItem(
+                        selected = selectedTabIndex == 0,
+                        onClick = { selectedTabIndex = 0 },
+                        icon = { Icon(Icons.Default.AttachMoney, contentDescription = "환율") },
+                        label = { Text("환율") }
+                    )
+                    NavigationBarItem(
+                        selected = selectedTabIndex == 1,
+                        onClick = { selectedTabIndex = 1 },
+                        icon = { Icon(Icons.Default.Notifications, contentDescription = "알림") },
+                        label = { Text("알림") }
+                    )
                 }
+            }
+        ) { paddingValues ->
+            when (selectedTabIndex) {
+                0 -> ExchangeRateScreen(
+                    modifier = Modifier.padding(paddingValues)
+                )
+                1 -> AlertScreen(
+                    modifier = Modifier.padding(paddingValues)
+                )
             }
         }
     }

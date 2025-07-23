@@ -1,0 +1,20 @@
+package net.ifmain.hwanultoktok.kmp.presentation.state
+
+import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRate
+
+data class ExchangeRateUiState(
+    val isLoading: Boolean = false,
+    val exchangeRates: List<ExchangeRate> = emptyList(),
+    val selectedCurrencies: Set<String> = setOf(
+        "USD", "EUR", "JPY", "CNH", "GBP", "AUD", "CAD", "CHF", 
+        "HKD", "SEK", "NZD", "SGD", "NOK", "MXN", "INR", "RUB",
+        "ZAR", "TRY", "BRL", "TWD", "DKK", "PLN", "THB", "MYR"
+    ),
+    val errorMessage: String? = null,
+    val isRefreshing: Boolean = false
+) {
+    val filteredExchangeRates: List<ExchangeRate>
+        get() = exchangeRates.filter { rate ->
+            selectedCurrencies.contains(rate.currencyCode)
+        }
+}
