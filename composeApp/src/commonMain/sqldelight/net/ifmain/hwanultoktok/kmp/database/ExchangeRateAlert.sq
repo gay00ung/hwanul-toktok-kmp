@@ -34,3 +34,35 @@ DELETE FROM ExchangeRateAlert WHERE id = ?;
 
 deleteAllAlerts:
 DELETE FROM ExchangeRateAlert;
+
+CREATE TABLE FavoriteCurrencyPair (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    fromCurrencyCode TEXT NOT NULL,
+    toCurrencyCode TEXT NOT NULL,
+    displayOrder INTEGER NOT NULL DEFAULT 0,
+    createdAt TEXT NOT NULL,
+    UNIQUE(fromCurrencyCode, toCurrencyCode)
+);
+
+insertFavorite:
+INSERT INTO FavoriteCurrencyPair (fromCurrencyCode, toCurrencyCode, displayOrder, createdAt)
+VALUES (?, ?, ?, ?);
+
+getAllFavorites:
+SELECT * FROM FavoriteCurrencyPair ORDER BY displayOrder ASC, createdAt DESC;
+
+getFavoriteById:
+SELECT * FROM FavoriteCurrencyPair WHERE id = ?;
+
+checkIsFavorite:
+SELECT COUNT(*) > 0 FROM FavoriteCurrencyPair
+WHERE fromCurrencyCode = ? AND toCurrencyCode = ?;
+
+deleteFavorite:
+DELETE FROM FavoriteCurrencyPair WHERE fromCurrencyCode = ? AND toCurrencyCode = ?;
+
+deleteFavoriteById:
+DELETE FROM FavoriteCurrencyPair WHERE id = ?;
+
+updateDisplayOrder:
+UPDATE FavoriteCurrencyPair SET displayOrder = ? WHERE id = ?;

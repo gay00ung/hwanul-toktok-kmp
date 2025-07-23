@@ -6,14 +6,21 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import net.ifmain.hwanultoktok.kmp.domain.usecase.GetExchangeRatesUseCase
+import net.ifmain.hwanultoktok.kmp.domain.usecase.GetFavoritesUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.RefreshExchangeRatesUseCase
+import net.ifmain.hwanultoktok.kmp.domain.usecase.ToggleFavoriteUseCase
 import net.ifmain.hwanultoktok.kmp.presentation.state.ExchangeRateUiState
 
 class ExchangeRateViewModel(
     private val getExchangeRatesUseCase: GetExchangeRatesUseCase,
-    private val refreshExchangeRatesUseCase: RefreshExchangeRatesUseCase
+    private val refreshExchangeRatesUseCase: RefreshExchangeRatesUseCase,
+    private val getFavoriteUseCase: GetFavoritesUseCase,
+    private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExchangeRateUiState())
@@ -21,12 +28,20 @@ class ExchangeRateViewModel(
 
     init {
         loadExchangeRates()
+        getFavoriteUseCase()
+            .onEach { favorites ->
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        favoriteIds = favorites.map { it.toCurrencyCode }.toSet()
+                    )
+                }
+            }.launchIn(viewModelScope)
     }
 
     fun loadExchangeRates() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            
+
             try {
                 getExchangeRatesUseCase()
                     .catch { error ->
@@ -54,7 +69,7 @@ class ExchangeRateViewModel(
     fun refreshExchangeRates() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
-            
+
             val result = refreshExchangeRatesUseCase()
             result.fold(
                 onSuccess = { rates ->
@@ -82,6 +97,19 @@ class ExchangeRateViewModel(
             currentSelected.add(currencyCode)
         }
         _uiState.value = _uiState.value.copy(selectedCurrencies = currentSelected)
+    }
+    fun toggleFavorite(currencyCode: String) {
+        viewModelScope.launch {
+            toggleFavoriteUseCase(
+                fromCurrencyCode = "KRW",
+                toCurrencyCode = currencyCode
+            )
+        }
+    }
+    fun toggleFavoritesFilter() {
+        _uiState.update { currentState ->
+            currentState.copy(showFavoritesOnly = !currentState.showFavoritesOnly)
+        }
     }
 
     fun clearError() {

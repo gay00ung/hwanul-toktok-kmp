@@ -5,6 +5,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,7 +27,7 @@ fun ExchangeRateScreen(
     viewModel: ExchangeRateViewModel = koinInject()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    
+
     LaunchedEffect(Unit) {
         viewModel.loadExchangeRates()
     }
@@ -61,27 +63,48 @@ fun ExchangeRateScreen(
             }
         }
 
-        // Header with refresh button
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        // Header with refresh button and favorites toggle
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp)
         ) {
-            Text(
-                text = "실시간 환율",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-            
-            IconButton(
-                onClick = { viewModel.refreshExchangeRates() },
-                enabled = !uiState.isRefreshing
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    Icons.Default.Refresh,
-                    contentDescription = "새로고침"
+                Text(
+                    text = "실시간 환율",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                IconButton(
+                    onClick = { viewModel.refreshExchangeRates() },
+                    enabled = !uiState.isRefreshing
+                ) {
+                    Icon(
+                        Icons.Default.Refresh,
+                        contentDescription = "새로고침"
+                    )
+                }
+            }
+
+            // Favorites filter toggle
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "즐겨찾기만 보기",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+                Switch(
+                    checked = uiState.showFavoritesOnly,
+                    onCheckedChange = { viewModel.toggleFavoritesFilter() }
                 )
             }
         }
@@ -95,7 +118,7 @@ fun ExchangeRateScreen(
                     CircularProgressIndicator()
                 }
             }
-            
+
             uiState.filteredExchangeRates.isEmpty() -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -108,7 +131,7 @@ fun ExchangeRateScreen(
                     )
                 }
             }
-            
+
             else -> {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -117,6 +140,8 @@ fun ExchangeRateScreen(
                     items(uiState.filteredExchangeRates) { exchangeRate ->
                         ExchangeRateCard(
                             exchangeRate = exchangeRate,
+                            isFavorite = uiState.favoriteIds.contains(exchangeRate.currencyCode),
+                            onFavoriteClick = { viewModel.toggleFavorite(exchangeRate.currencyCode) },
                             modifier = Modifier.padding(vertical = 4.dp)
                         )
                     }
@@ -129,6 +154,8 @@ fun ExchangeRateScreen(
 @Composable
 fun ExchangeRateCard(
     exchangeRate: ExchangeRate,
+    isFavorite: Boolean,
+    onFavoriteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     ElevatedCard(modifier = modifier.fillMaxWidth()) {
@@ -138,9 +165,9 @@ fun ExchangeRateCard(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = exchangeRate.currencyCode,
                         style = MaterialTheme.typography.titleLarge,
@@ -152,17 +179,32 @@ fun ExchangeRateCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
-                Text(
-                    text = exchangeRate.baseRate.format(2),
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+
+                Column(
+                    horizontalAlignment = Alignment.End
+                ) {
+                    Text(
+                        text = exchangeRate.baseRate.format(2),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    IconButton(
+                        onClick = onFavoriteClick,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isFavorite) Icons.Default.Star else Icons.Default.StarBorder,
+                            contentDescription = if (isFavorite) "즐겨찾기 해제" else "즐겨찾기 추가",
+                            tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -179,7 +221,7 @@ fun ExchangeRateCard(
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
+
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "매도",
@@ -192,7 +234,7 @@ fun ExchangeRateCard(
                         fontWeight = FontWeight.Medium
                     )
                 }
-                
+
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text = "송금",
