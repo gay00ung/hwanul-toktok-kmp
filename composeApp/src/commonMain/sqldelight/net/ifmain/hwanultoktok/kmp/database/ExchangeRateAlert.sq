@@ -1,0 +1,36 @@
+CREATE TABLE ExchangeRateAlert (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    currencyCode TEXT NOT NULL,
+    alertType TEXT NOT NULL,
+    targetRate REAL NOT NULL,
+    isEnabled INTEGER NOT NULL DEFAULT 1,
+    createdAt TEXT NOT NULL
+);
+
+insertAlert:
+INSERT INTO ExchangeRateAlert (currencyCode, alertType, targetRate, isEnabled, createdAt)
+VALUES (?, ?, ?, ?, ?);
+
+getAllAlerts:
+SELECT * FROM ExchangeRateAlert ORDER BY createdAt DESC;
+
+getAlertById:
+SELECT * FROM ExchangeRateAlert WHERE id = ?;
+
+getAlertsByCurrency:
+SELECT * FROM ExchangeRateAlert WHERE currencyCode = ? ORDER BY createdAt DESC;
+
+updateAlert:
+UPDATE ExchangeRateAlert SET
+    currencyCode = ?,
+    alertType = ?,
+    targetRate = ?,
+    isEnabled = ?,
+    createdAt = ?
+WHERE id = ?;
+
+deleteAlert:
+DELETE FROM ExchangeRateAlert WHERE id = ?;
+
+deleteAllAlerts:
+DELETE FROM ExchangeRateAlert;
