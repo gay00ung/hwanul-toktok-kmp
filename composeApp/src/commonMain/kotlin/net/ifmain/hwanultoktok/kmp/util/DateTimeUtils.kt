@@ -36,3 +36,9 @@ fun getExchangeRateSearchDate(): String {
     // YYYYMMDD 형식으로 변환
     return searchDate.toString().replace("-", "")
 }
+
+fun formatDateTime(dateTime: LocalDateTime): String {
+    val hour = dateTime.hour.toString().padStart(2, '0')
+    val minute = dateTime.minute.toString().padStart(2, '0')
+    return "${dateTime.year}년 ${dateTime.monthNumber}월 ${dateTime.dayOfMonth}일 $hour:$minute 기준"
+}

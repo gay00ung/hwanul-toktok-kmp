@@ -54,7 +54,8 @@ class ExchangeRateViewModel(
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             exchangeRates = rates,
-                            errorMessage = null
+                            errorMessage = null,
+                            lastUpdateTime = rates.firstOrNull()?.timestamp
                         )
                     }
             } catch (e: Exception) {
@@ -76,7 +77,8 @@ class ExchangeRateViewModel(
                     _uiState.value = _uiState.value.copy(
                         isRefreshing = false,
                         exchangeRates = rates,
-                        errorMessage = null
+                        errorMessage = null,
+                        lastUpdateTime = rates.firstOrNull()?.timestamp
                     )
                 },
                 onFailure = { error ->

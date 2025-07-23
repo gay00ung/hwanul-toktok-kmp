@@ -1,5 +1,6 @@
 package net.ifmain.hwanultoktok.kmp.presentation.state
 
+import kotlinx.datetime.LocalDateTime
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRate
 
 data class ExchangeRateUiState(
@@ -14,6 +15,7 @@ data class ExchangeRateUiState(
     val isRefreshing: Boolean = false,
     val favoriteIds: Set<String> = emptySet(),
     val showFavoritesOnly: Boolean = false,
+    val lastUpdateTime: LocalDateTime? = null,
 ) {
     val filteredExchangeRates: List<ExchangeRate>
         get() = exchangeRates.filter { rate ->
