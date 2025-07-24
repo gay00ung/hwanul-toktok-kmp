@@ -4,7 +4,6 @@ import io.ktor.util.date.getTimeMillis
 import kotlinx.coroutines.flow.first
 import net.ifmain.hwanultoktok.kmp.domain.model.AlertCheckResult
 import net.ifmain.hwanultoktok.kmp.domain.model.AlertType
-import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRateAlert
 import net.ifmain.hwanultoktok.kmp.domain.repository.AlertRepository
 import net.ifmain.hwanultoktok.kmp.domain.repository.ExchangeRateRepository
 

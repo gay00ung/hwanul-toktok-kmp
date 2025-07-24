@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRateChange
 import net.ifmain.hwanultoktok.kmp.domain.repository.ExchangeRateRepository
-import kotlin.system.getTimeMillis
 
 class MonitorExchangeRateUseCase(
     private val exchangeRateRepository: ExchangeRateRepository

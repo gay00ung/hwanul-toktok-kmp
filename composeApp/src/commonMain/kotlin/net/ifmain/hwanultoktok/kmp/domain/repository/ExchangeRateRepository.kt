@@ -2,7 +2,6 @@ package net.ifmain.hwanultoktok.kmp.domain.repository
 
 import kotlinx.coroutines.flow.Flow
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRate
-import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRateChange
 
 interface ExchangeRateRepository {
     suspend fun getExchangeRates(): Flow<List<ExchangeRate>>
