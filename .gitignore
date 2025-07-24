@@ -17,3 +17,15 @@ captures
 !*.xcodeproj/project.xcworkspace/
 !*.xcworkspace/contents.xcworkspacedata
 **/xcshareddata/WorkspaceSettings.xcsettings
+# 민감한 정보가 포함될 수 있는 파일들
+*.xcconfig
+local.properties
+*.keystore
+*.p12
+*.mobileprovision
+.env
+.env.local
+.env.production
+secrets.json
+google-services.json
+GoogleService-Info.plist
