@@ -1,6 +1,5 @@
 package net.ifmain.hwanultoktok.kmp.domain.usecase
 
-import io.ktor.util.date.getTimeMillis
 import kotlinx.coroutines.flow.first
 import net.ifmain.hwanultoktok.kmp.domain.model.AlertCheckResult
 import net.ifmain.hwanultoktok.kmp.domain.model.AlertType
@@ -27,13 +26,8 @@ class CheckAlertConditionsUseCase(
                 AlertType.BELOW -> currentRate <= alert.targetRate
             }
             
-            // 중복 알림 방지를 위해 마지막 알림 시간 체크
-            val lastTriggeredTime = alertRepository.getLastTriggeredTime(alert.id)
-            val now = getTimeMillis()
-            val cooldownPeriod = 60 * 60 * 1000L // 1시간
-            
-            val shouldSend = shouldTrigger && 
-                (lastTriggeredTime == null || now - lastTriggeredTime > cooldownPeriod)
+            // 매일 한 번만 체크하므로 중복 알림 방지 불필요
+            val shouldSend = shouldTrigger
             
             AlertCheckResult(
                 alert = alert,

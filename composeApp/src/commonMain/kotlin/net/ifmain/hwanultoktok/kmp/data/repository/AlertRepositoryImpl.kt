@@ -60,4 +60,13 @@ class AlertRepositoryImpl(
             id = alert.id
         )
     }
+
+    override suspend fun getLastTriggeredTime(alertId: Long): Long? {
+        // 매일 한 번만 체크하므로 항상 null 반환 (항상 알림 가능)
+        return null
+    }
+
+    override suspend fun updateLastTriggeredTime(alertId: Long, timestamp: Long) {
+        // 매일 한 번만 체크하므로 저장할 필요 없음
+    }
 }

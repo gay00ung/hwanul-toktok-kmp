@@ -30,21 +30,26 @@ class IosNotificationService : NotificationService {
             setSound(UNNotificationSound.defaultSound)
         }
 
-        val trigger = UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(1.0, false)
+        // 즉시 알림을 위해 0.1초로 설정
+        val trigger = UNTimeIntervalNotificationTrigger.triggerWithTimeInterval(0.1, false)
         val request = UNNotificationRequest.requestWithIdentifier(
             identifier = notificationId.toString(),
             content = content,
             trigger = trigger
         )
 
-        UNUserNotificationCenter.currentNotificationCenter().addNotificationRequest(request, null)
+        UNUserNotificationCenter.currentNotificationCenter().addNotificationRequest(request) { error ->
+            if (error != null) {
+                println("iOS 알림 발송 에러: ${error.localizedDescription}")
+            }
+        }
     }
 
-    override suspend fun requestNotificationPermission(): Boolean = suspendCoroutine { contiunation ->
+    override suspend fun requestNotificationPermission(): Boolean = suspendCoroutine { continuation ->
         UNUserNotificationCenter.currentNotificationCenter().requestAuthorizationWithOptions(
             UNAuthorizationOptionAlert or UNAuthorizationOptionSound or UNAuthorizationOptionBadge
         ) { granted, _ ->
-            contiunation.resume(granted)
+            continuation.resume(granted)
 
         }
 
