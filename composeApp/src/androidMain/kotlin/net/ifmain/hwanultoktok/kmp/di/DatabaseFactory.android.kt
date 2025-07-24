@@ -7,6 +7,11 @@ import net.ifmain.hwanultoktok.kmp.database.HwanulDatabase
 
 actual class DatabaseDriverFactory(private val context: Context) {
     actual fun createDriver(): SqlDriver {
-        return AndroidSqliteDriver(HwanulDatabase.Schema, context, "hwanul.db")
+        return AndroidSqliteDriver(
+            HwanulDatabase.Schema, 
+            context, 
+            "hwanultoktok.db",
+            callback = AndroidSqliteDriver.Callback(HwanulDatabase.Schema)
+        )
     }
 }

@@ -9,14 +9,18 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import net.ifmain.hwanultoktok.kmp.domain.model.AlertType
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRateAlert
+import net.ifmain.hwanultoktok.kmp.domain.service.NotificationService
 import net.ifmain.hwanultoktok.kmp.domain.usecase.GetAlertsUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.ManageAlertUseCase
+import net.ifmain.hwanultoktok.kmp.domain.usecase.ScheduleExchangeRateCheckUseCase
 import net.ifmain.hwanultoktok.kmp.presentation.state.AlertUiState
 import net.ifmain.hwanultoktok.kmp.util.getCurrentDateTime
 
 class AlertViewModel(
     private val getAlertsUseCase: GetAlertsUseCase,
-    private val manageAlertUseCase: ManageAlertUseCase
+    private val manageAlertUseCase: ManageAlertUseCase,
+    private val scheduleExchangeRateCheckUseCase: ScheduleExchangeRateCheckUseCase,
+    private val notificationService: NotificationService,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AlertUiState())
@@ -24,6 +28,8 @@ class AlertViewModel(
 
     init {
         loadAlerts()
+        // 앱 시작 시 알림 권한 요청
+        requestNotificationPermission()
     }
 
     private fun loadAlerts() {
@@ -93,8 +99,36 @@ class AlertViewModel(
             }
         }
     }
+    
+    fun startBackgroundMonitoring() {
+        viewModelScope.launch {
+            scheduleExchangeRateCheckUseCase(15)
+        }
+    }
+
+    fun stopBackgroundMonitoring() {
+        viewModelScope.launch {
+            scheduleExchangeRateCheckUseCase.cancel()
+        }
+    }
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
+    
+    private fun requestNotificationPermission() {
+        viewModelScope.launch {
+            try {
+                val granted = notificationService.requestNotificationPermission()
+                if (!granted) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "알림 권한이 필요합니다. 설정에서 알림을 허용해주세요."
+                    )
+                }
+            } catch (e: Exception) {
+                // 권한 요청 실패 시 무시 (사용자가 나중에 수동으로 허용 가능)
+            }
+        }
+    }
+    
 }

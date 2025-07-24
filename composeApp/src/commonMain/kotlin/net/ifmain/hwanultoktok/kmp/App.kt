@@ -15,6 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -27,6 +28,8 @@ import net.ifmain.hwanultoktok.kmp.presentation.ui.AlertScreen
 import net.ifmain.hwanultoktok.kmp.presentation.ui.ExchangeRateScreen
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import org.koin.compose.KoinApplication
+import org.koin.compose.koinInject
+import net.ifmain.hwanultoktok.kmp.domain.service.NotificationService
 
 @Composable
 @Preview
@@ -43,6 +46,17 @@ fun App(modifier: Modifier = Modifier) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HwanulTokTokApp(modifier: Modifier = Modifier) {
+    val notificationService: NotificationService = koinInject()
+    
+    // 앱 시작 시 알림 권한 요청
+    LaunchedEffect(Unit) {
+        try {
+            notificationService.requestNotificationPermission()
+        } catch (e: Exception) {
+            // 권한 요청 실패 시 무시
+        }
+    }
+    
     MaterialTheme {
         var selectedTabIndex by remember { mutableStateOf(0) }
         

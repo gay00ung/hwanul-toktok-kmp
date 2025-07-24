@@ -39,4 +39,12 @@ class ExchangeRateRepositoryImpl(
             Result.failure(e)
         }
     }
+
+    override suspend fun getPreviousExchangeRates(): List<ExchangeRate> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun savePreviousExchangeRates(rates: List<ExchangeRate>) {
+        TODO("Not yet implemented")
+    }
 }

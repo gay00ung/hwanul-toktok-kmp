@@ -40,6 +40,7 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
             implementation(libs.sqldelight.android.driver)
+            implementation("androidx.work:work-runtime-ktx:2.10.2")
         }
         
         iosMain.dependencies {

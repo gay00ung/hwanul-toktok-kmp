@@ -1,6 +1,7 @@
 package net.ifmain.hwanultoktok.kmp.presentation.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -36,18 +37,19 @@ fun AlertScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddAlertDialog by remember { mutableStateOf(false) }
 
-    Column(modifier = modifier.fillMaxSize()) {
-        // Error handling
-        uiState.errorMessage?.let { error ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "오류",
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Error handling
+            uiState.errorMessage?.let { error ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "오류",
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
@@ -81,36 +83,6 @@ fun AlertScreen(
                 fontWeight = FontWeight.Bold
             )
             
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .shadow(
-                        elevation = 8.dp,
-                        shape = CircleShape,
-                        ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
-                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
-                    )
-                    .clip(CircleShape)
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.tertiary
-                            )
-                        )
-                    )
-            ) {
-                IconButton(
-                    onClick = { showAddAlertDialog = true },
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "알림 추가",
-                        tint = Color.White
-                    )
-                }
-            }
         }
 
         when {
@@ -161,6 +133,41 @@ fun AlertScreen(
                             onDeleteClick = { viewModel.deleteAlert(alert.id) }
                         )
                     }
+                }
+            }
+        }
+    }
+
+        // FAB
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
+        ) {
+            FloatingActionButton(
+                onClick = { showAddAlertDialog = true },
+                containerColor = Color.Transparent,
+                elevation = FloatingActionButtonDefaults.elevation(8.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.tertiary
+                                )
+                            ),
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "알림 추가",
+                        tint = Color.White
+                    )
                 }
             }
         }

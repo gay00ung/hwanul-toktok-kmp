@@ -8,4 +8,6 @@ interface AlertRepository {
     suspend fun insertAlert(alert: ExchangeRateAlert)
     suspend fun deleteAlert(alertId: Long)
     suspend fun updateAlert(alert: ExchangeRateAlert)
+    suspend fun getLastTriggeredTime(alertId: Long): Long?
+    suspend fun updateLastTriggeredTime(alertId: Long, timestamp: Long)
 }
