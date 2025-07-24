@@ -1,6 +1,7 @@
 package net.ifmain.hwanultoktok.kmp
 
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material.icons.Icons
@@ -14,16 +15,19 @@ import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 import net.ifmain.hwanultoktok.kmp.di.commonModule
 import net.ifmain.hwanultoktok.kmp.di.platformModule
+import net.ifmain.hwanultoktok.kmp.presentation.theme.HwanulTheme
 import net.ifmain.hwanultoktok.kmp.presentation.ui.ExchangeRateScreen
 import net.ifmain.hwanultoktok.kmp.presentation.ui.AlertScreen
 
 @Composable
 @Preview
 fun App(modifier: Modifier = Modifier) {
-    KoinApplication(application = {
-        modules(commonModule, platformModule)
-    }) {
-        HwanulTokTokApp(modifier)
+    HwanulTheme {
+        KoinApplication(application = {
+            modules(commonModule, platformModule)
+        }) {
+            HwanulTokTokApp(modifier)
+        }
     }
 }
 
@@ -41,7 +45,9 @@ fun HwanulTokTokApp(modifier: Modifier = Modifier) {
                 )
             },
             bottomBar = {
-                NavigationBar {
+                NavigationBar(
+                    modifier = Modifier.navigationBarsPadding()
+                ) {
                     NavigationBarItem(
                         selected = selectedTabIndex == 0,
                         onClick = { selectedTabIndex = 0 },
