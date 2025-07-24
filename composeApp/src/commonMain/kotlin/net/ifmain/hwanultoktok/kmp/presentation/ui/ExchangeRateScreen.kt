@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -53,7 +55,7 @@ fun ExchangeRateScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars)
+            .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Top))
     ) {
         // Error handling
         uiState.errorMessage?.let { error ->
@@ -170,8 +172,10 @@ fun ExchangeRateScreen(
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
-                        horizontal = 16.dp,
-                        vertical = 8.dp
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 8.dp,
+                        bottom = 4.dp
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -179,8 +183,7 @@ fun ExchangeRateScreen(
                         SimpleExchangeRateCard(
                             exchangeRate = exchangeRate,
                             isFavorite = uiState.favoriteIds.contains(exchangeRate.currencyCode),
-                            onFavoriteClick = { viewModel.toggleFavorite(exchangeRate.currencyCode) },
-                            modifier = Modifier.padding(vertical = 4.dp)
+                            onFavoriteClick = { viewModel.toggleFavorite(exchangeRate.currencyCode) }
                         )
                     }
                 }
