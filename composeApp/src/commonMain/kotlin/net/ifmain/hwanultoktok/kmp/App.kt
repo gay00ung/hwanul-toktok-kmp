@@ -11,9 +11,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -64,12 +66,16 @@ fun HwanulTokTokApp(modifier: Modifier = Modifier) {
             modifier = modifier.fillMaxSize(),
             topBar = {
                 TopAppBar(
-                    title = { Text("환율 톡톡") }
+                    title = { Text("환율 톡톡") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 )
             },
             bottomBar = {
                 NavigationBar(
-                    modifier = Modifier.navigationBarsPadding()
+                    modifier = Modifier.navigationBarsPadding(),
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     NavigationBarItem(
                         selected = selectedTabIndex == 0,
