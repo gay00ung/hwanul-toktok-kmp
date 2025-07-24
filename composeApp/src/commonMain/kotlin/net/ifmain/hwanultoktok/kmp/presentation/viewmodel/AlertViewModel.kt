@@ -11,12 +11,14 @@ import net.ifmain.hwanultoktok.kmp.domain.model.AlertType
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRateAlert
 import net.ifmain.hwanultoktok.kmp.domain.usecase.GetAlertsUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.ManageAlertUseCase
+import net.ifmain.hwanultoktok.kmp.domain.usecase.ScheduleExchangeRateCheckUseCase
 import net.ifmain.hwanultoktok.kmp.presentation.state.AlertUiState
 import net.ifmain.hwanultoktok.kmp.util.getCurrentDateTime
 
 class AlertViewModel(
     private val getAlertsUseCase: GetAlertsUseCase,
-    private val manageAlertUseCase: ManageAlertUseCase
+    private val manageAlertUseCase: ManageAlertUseCase,
+    private val scheduleExchangeRateCheckUseCase: ScheduleExchangeRateCheckUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AlertUiState())
@@ -91,6 +93,18 @@ class AlertViewModel(
                     errorMessage = e.message ?: "알림 수정에 실패했습니다"
                 )
             }
+        }
+    }
+
+    fun startBackgroundMonitoring() {
+        viewModelScope.launch {
+            scheduleExchangeRateCheckUseCase(15)
+        }
+    }
+
+    fun stopBackgroundMonitoring() {
+        viewModelScope.launch {
+            scheduleExchangeRateCheckUseCase.cancel()
         }
     }
 

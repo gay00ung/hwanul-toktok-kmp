@@ -6,5 +6,17 @@
 	<true/>
 	<key>KOREAEXIM_API_KEY</key>
 	<string>$(KOREAEXIM_API_KEY)</string>
+
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+        <string>processing</string>
+    </array>
+
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>net.ifmain.hwanultoktok.kmp.exchangeRateCheck</string>
+    </array>
+
 </dict>
 </plist>

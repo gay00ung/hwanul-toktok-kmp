@@ -7,12 +7,15 @@ import net.ifmain.hwanultoktok.kmp.data.repository.FavoriteRepositoryImpl
 import net.ifmain.hwanultoktok.kmp.domain.repository.AlertRepository
 import net.ifmain.hwanultoktok.kmp.domain.repository.ExchangeRateRepository
 import net.ifmain.hwanultoktok.kmp.domain.repository.FavoriteRepository
+import net.ifmain.hwanultoktok.kmp.domain.usecase.CheckAlertConditionsUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.CheckIsFavoriteUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.GetAlertsUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.GetExchangeRatesUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.GetFavoritesUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.ManageAlertUseCase
+import net.ifmain.hwanultoktok.kmp.domain.usecase.MonitorExchangeRateUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.RefreshExchangeRatesUseCase
+import net.ifmain.hwanultoktok.kmp.domain.usecase.ScheduleExchangeRateCheckUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.ToggleFavoriteUseCase
 import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.AlertViewModel
 import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.ExchangeRateViewModel
@@ -23,11 +26,15 @@ val commonModule = module {
     single { createHttpClient() }
     single { KoreaExImBankApi(get()) }
     single { createDatabase(get()) }
-    
+    single { MonitorExchangeRateUseCase(get()) }
+    single { CheckAlertConditionsUseCase(get(), get()) }
+    single { ScheduleExchangeRateCheckUseCase(get()) }
+
+
     single<ExchangeRateRepository> { ExchangeRateRepositoryImpl(get(), get()) }
     single<AlertRepository> { AlertRepositoryImpl(get()) }
     single<FavoriteRepository> { FavoriteRepositoryImpl(get()) }
-    
+
     factoryOf(::GetExchangeRatesUseCase)
     factoryOf(::RefreshExchangeRatesUseCase)
     factoryOf(::GetAlertsUseCase)
