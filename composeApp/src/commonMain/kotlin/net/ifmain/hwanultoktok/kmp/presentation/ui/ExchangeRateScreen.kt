@@ -97,11 +97,11 @@ fun ExchangeRateScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-
                     Text(
                         text = "실시간 환율",
                         style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 8.dp)
                     )
 
                     uiState.lastUpdateTime?.let { updateTime ->
