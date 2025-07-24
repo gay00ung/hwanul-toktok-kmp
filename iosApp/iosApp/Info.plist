@@ -18,5 +18,10 @@
         <string>net.ifmain.hwanultoktok.kmp.exchangeRateCheck</string>
     </array>
 
+    <key>UIStatusBarStyle</key>
+    <string>UIStatusBarStyleLightContent</string>
+    <key>UIViewControllerBasedStatusBarAppearance</key>
+    <false/>
+
 </dict>
 </plist>
