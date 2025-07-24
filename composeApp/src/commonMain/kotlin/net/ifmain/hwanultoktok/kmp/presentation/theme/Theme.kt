@@ -6,46 +6,50 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
+    primary = Primary40,
     onPrimary = Color.White,
-    primaryContainer = Purple80,
-    onPrimaryContainer = Color.Black,
+    primaryContainer = Primary80.copy(alpha = 0.3f),
+    onPrimaryContainer = DeepBlue,
 
-    secondary = Pink40,
+    secondary = Secondary40,
     onSecondary = Color.White,
-    secondaryContainer = Pink80,
-    onSecondaryContainer = Color.Black,
+    secondaryContainer = Secondary80.copy(alpha = 0.3f),
+    onSecondaryContainer = Color(0xFF8B0000),
 
-    tertiary = NeonBlue,
+    tertiary = MintGreen,
     onTertiary = Color.Black,
+    tertiaryContainer = MintGreen.copy(alpha = 0.2f),
+    onTertiaryContainer = Color(0xFF004D40),
 
-    background = LightGray,
+    background = Gray100,
     onBackground = Color.Black,
 
     surface = Color.White,
     onSurface = Color.Black,
-    surfaceVariant = Color(0xFFF3F4F6),
+    surfaceVariant = Gray200,
     onSurfaceVariant = Color(0xFF666666),
 
-    error = Color(0xFFE91E63),
+    error = Color(0xFFE53E3E),
     onError = Color.White,
-    errorContainer = Color(0xFFFCE4EC),
-    onErrorContainer = Color(0xFFC2185B)
+    errorContainer = Color(0xFFFED7D7),
+    onErrorContainer = Color(0xFF9B2C2C)
 )
 
 private val DarkColorScheme = darkColorScheme(
     primary = DarkPrimary,
     onPrimary = Color.Black,
-    primaryContainer = Purple40,
+    primaryContainer = Primary40.copy(alpha = 0.3f),
     onPrimaryContainer = Color.White,
 
-    secondary = Pink80,
+    secondary = Secondary80,
     onSecondary = Color.Black,
-    secondaryContainer = Pink40,
+    secondaryContainer = Secondary40.copy(alpha = 0.3f),
     onSecondaryContainer = Color.White,
 
     tertiary = NeonBlue,
     onTertiary = Color.Black,
+    tertiaryContainer = NeonBlue.copy(alpha = 0.2f),
+    onTertiaryContainer = Color.White,
 
     background = DarkBackground,
     onBackground = Color.White,
@@ -55,10 +59,10 @@ private val DarkColorScheme = darkColorScheme(
     surfaceVariant = Color(0xFF2A2A2A),
     onSurfaceVariant = Color(0xFFB0B0B0),
 
-    error = Color(0xFFCF6679),
+    error = Color(0xFFEF5350),
     onError = Color.Black,
-    errorContainer = Color(0xFF93000A),
-    onErrorContainer = Color(0xFFFFDAD6)
+    errorContainer = Color(0xFF8B0000),
+    onErrorContainer = Color(0xFFFFCDD2)
 )
 
 @Composable
