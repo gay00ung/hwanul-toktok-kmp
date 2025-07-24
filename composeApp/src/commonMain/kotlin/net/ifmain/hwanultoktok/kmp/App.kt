@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.AttachMoney
@@ -68,7 +69,9 @@ fun HwanulTokTokApp(modifier: Modifier = Modifier) {
         var selectedTabIndex by remember { mutableStateOf(0) }
 
         Scaffold(
-            modifier = modifier.fillMaxSize(),
+            modifier = modifier
+                .fillMaxSize()
+                .systemBarsPadding(),
             topBar = {
                 TopAppBar(
                     title = {
