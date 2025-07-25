@@ -329,7 +329,7 @@ fun AddAlertDialog(
     var targetRateText by remember { mutableStateOf("") }
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val currencies = uiState.selectedCurrencies.toList()
+    val currencies = uiState.selectedCurrencies
 
     AlertDialog(
         onDismissRequest = onDismiss,

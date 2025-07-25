@@ -14,6 +14,7 @@ class ExchangeRateRepositoryImpl(
 ) : ExchangeRateRepository {
 
     private var cachedRates: List<ExchangeRate> = emptyList()
+    private var previousExchangeRates: List<ExchangeRate> = emptyList()
 
     override suspend fun getExchangeRates(): Flow<List<ExchangeRate>> = flow {
         if (cachedRates.isEmpty()) {
@@ -41,10 +42,10 @@ class ExchangeRateRepositoryImpl(
     }
 
     override suspend fun getPreviousExchangeRates(): List<ExchangeRate> {
-        TODO("Not yet implemented")
+        return previousExchangeRates
     }
 
     override suspend fun savePreviousExchangeRates(rates: List<ExchangeRate>) {
-        TODO("Not yet implemented")
+        previousExchangeRates = rates
     }
 }
