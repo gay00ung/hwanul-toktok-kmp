@@ -1,0 +1,9 @@
+TEAM_ID=
+BUNDLE_ID=net.ifmain.hwanultoktok.kmp
+APP_NAME=HwanulTokTok
+
+PRODUCT_NAME=HwanulTokTok
+PRODUCT_BUNDLE_IDENTIFIER=net.ifmain.hwanultoktok.kmp
+
+// API Keys - DO NOT COMMIT ACTUAL KEYS
+KOREAEXIM_API_KEY=YOUR_API_KEY_HERE
