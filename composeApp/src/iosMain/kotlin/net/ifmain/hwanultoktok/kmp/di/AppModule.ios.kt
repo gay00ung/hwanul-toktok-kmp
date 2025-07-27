@@ -10,7 +10,13 @@ import org.koin.dsl.module
 actual val platformModule = module {
     single { DatabaseDriverFactory() }
     single { ApiKeyProvider.getApiKey() }
-    single<BackgroundTaskRepository> { IosBackgroundTaskRepository() }
+    single<BackgroundTaskRepository> { 
+        IosBackgroundTaskRepository(
+            checkAlertConditionsUseCase = get(),
+            notificationService = get(),
+            alertRepository = get()
+        )
+    }
     single<NotificationService> { IosNotificationService() }
 
 }
