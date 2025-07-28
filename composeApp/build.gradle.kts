@@ -26,7 +26,7 @@ kotlin {
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
-            isStatic = true
+            isStatic = false
         }
     }
     
@@ -52,6 +52,8 @@ kotlin {
             implementation(libs.koin.androidx.compose)
             implementation(libs.sqldelight.android.driver)
             implementation("androidx.work:work-runtime-ktx:2.10.2")
+            implementation("com.google.android.gms:play-services-ads:24.4.0")
+            implementation("com.google.guava:guava:31.1-android")
         }
         
         iosMain.dependencies {
@@ -126,6 +128,10 @@ android {
         }
         val apiKey = localProperties.getProperty("KOREAEXIM_API_KEY") ?: "YOUR_API_KEY_HERE"
         buildConfigField("String", "KOREAEXIM_API_KEY", "\"$apiKey\"")
+        
+        // AdMob App ID from local.properties
+        val admobAppId = localProperties.getProperty("ADMOB_APP_ID") ?: "YOUR_ADMOB_APP_ID_HERE"
+        manifestPlaceholders["admobAppId"] = admobAppId
     }
     
     buildFeatures {
