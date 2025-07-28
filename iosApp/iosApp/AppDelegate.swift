@@ -1,10 +1,11 @@
 import UIKit
 import BackgroundTasks
-import composeApp
+import ComposeApp
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        
         // 백그라운드 태스크 등록
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: "net.ifmain.hwanultoktok.kmp.exchangeRateCheck",
@@ -32,30 +33,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             return
         }
         
-        // KMP 모듈의 DI 컨테이너 가져오기
-        let koin = KoinKt.doInitKoin().koin
+        // Koin 초기화 (이미 초기화되어 있으면 무시됨)
+        IOSKoinComponentKt.doInitKoinIOS()
         
         // 백그라운드에서 환율 체크 실행
         Task {
             do {
-                // CheckAlertConditionsUseCase 실행
-                let checkAlertConditionsUseCase = koin.get(
-                    clazz: CheckAlertConditionsUseCase.self,
-                    qualifier: nil,
-                    parameters: nil
-                ) as! CheckAlertConditionsUseCase
-                
-                let notificationService = koin.get(
-                    clazz: NotificationService.self,
-                    qualifier: nil,
-                    parameters: nil
-                ) as! NotificationService
-                
-                let alertRepository = koin.get(
-                    clazz: AlertRepository.self,
-                    qualifier: nil,
-                    parameters: nil
-                ) as! AlertRepository
+                // KMP 모듈에서 필요한 객체들 가져오기
+                let checkAlertConditionsUseCase = IOSKoinComponentKt.getCheckAlertConditionsUseCaseIOS()
+                let notificationService = IOSKoinComponentKt.getNotificationServiceIOS()
+                let alertRepository = IOSKoinComponentKt.getAlertRepositoryIOS()
                 
                 // 알림 조건 체크
                 let alertResults = try await checkAlertConditionsUseCase.invoke()
