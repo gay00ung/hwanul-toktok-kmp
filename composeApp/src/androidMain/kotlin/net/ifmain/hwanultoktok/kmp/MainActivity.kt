@@ -21,13 +21,21 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.ifmain.hwanultoktok.kmp.presentation.AppWithBottomAd
+import net.ifmain.hwanultoktok.kmp.domain.usecase.ScheduleExchangeRateCheckUseCase
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class HwanulTokTokApplication : Application() {
+class HwanulTokTokApplication : Application(), KoinComponent {
     override fun onCreate() {
         super.onCreate()
         startKoin {
             androidContext(this@HwanulTokTokApplication)
             modules(commonModule, platformModule)
+        }
+
+        CoroutineScope(Dispatchers.IO).launch {
+            val scheduleUseCase: ScheduleExchangeRateCheckUseCase by inject()
+            scheduleUseCase(15)
         }
     }
 }
