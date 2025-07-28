@@ -10,6 +10,7 @@ import net.ifmain.hwanultoktok.kmp.domain.service.NotificationService
 import net.ifmain.hwanultoktok.kmp.domain.repository.AlertRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.launch
 
 class IosBackgroundTaskRepository(
@@ -109,7 +110,7 @@ class IosBackgroundTaskRepository(
     }
     
     private fun executeExchangeRateCheckInBackground() {
-        CoroutineScope(Dispatchers.Main).launch {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
                 // 환율 체크 로직 실행
                 val alertResults = checkAlertConditionsUseCase()

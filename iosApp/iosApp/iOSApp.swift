@@ -23,7 +23,9 @@ struct iOSApp: App {
                 case .authorized:
                     // 추적 권한이 허용됨
                     print("ATT: 사용자가 추적을 허용했습니다")
+                    #if DEBUG
                     print("IDFA: \(ASIdentifierManager.shared().advertisingIdentifier.uuidString)")
+                    #endif
                 case .denied:
                     // 추적 권한이 거부됨
                     print("ATT: 사용자가 추적을 거부했습니다")

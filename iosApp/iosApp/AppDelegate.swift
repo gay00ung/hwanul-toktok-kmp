@@ -14,7 +14,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             forTaskWithIdentifier: "net.ifmain.hwanultoktok.kmp.exchangeRateCheck",
             using: nil
         ) { task in
-            self.handleExchangeRateCheck(task: task as! BGAppRefreshTask)
+            guard let refreshTask = task as? BGAppRefreshTask else {
+                print("Failed to cast task to BGAppRefreshTask.")
+                task.setTaskCompleted(success: false)
+                return
+            }
+            self.handleExchangeRateCheck(task: refreshTask)
         }
         
         return true
