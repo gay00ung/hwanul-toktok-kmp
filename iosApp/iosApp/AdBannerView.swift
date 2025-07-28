@@ -4,8 +4,8 @@ import GoogleMobileAds
 struct AdBannerView: UIViewRepresentable {
     let adUnitID = "ca-app-pub-3940256099942544/2435281174" // iOS 테스트 배너 광고 ID
     
-    func makeUIView(context: Context) -> GADBannerView {
-        let bannerView = GADBannerView()
+    func makeUIView(context: Context) -> BannerView {
+        let bannerView = BannerView()
         bannerView.adUnitID = adUnitID
         
         // iOS 15+ safe way to get root view controller
@@ -14,12 +14,13 @@ struct AdBannerView: UIViewRepresentable {
             bannerView.rootViewController = rootViewController
         }
         
-        bannerView.adSize = GADAdSizeBanner
+        bannerView.adSize = AdSizeBanner
         return bannerView
     }
     
-    func updateUIView(_ uiView: GADBannerView, context: Context) {
-        uiView.load(GADRequest())
+    func updateUIView(_ uiView: BannerView, context: Context) {
+        let request = Request()
+        uiView.load(request)
     }
 }
 
