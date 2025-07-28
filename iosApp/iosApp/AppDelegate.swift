@@ -1,10 +1,13 @@
 import UIKit
 import BackgroundTasks
 import ComposeApp
+import GoogleMobileAds
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        GADMobileAds.sharedInstance().start(completionHandler: nil)
+
         
         // 백그라운드 태스크 등록
         BGTaskScheduler.shared.register(

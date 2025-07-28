@@ -16,6 +16,11 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import net.ifmain.hwanultoktok.kmp.di.commonModule
 import net.ifmain.hwanultoktok.kmp.di.platformModule
+import com.google.android.gms.ads.MobileAds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import net.ifmain.hwanultoktok.kmp.presentation.AppWithBottomAd
 
 class HwanulTokTokApplication : Application() {
     override fun onCreate() {
@@ -31,6 +36,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        
+        // AdMob 초기화
+        CoroutineScope(Dispatchers.IO).launch {
+            MobileAds.initialize(this@MainActivity) {}
+        }
         
         // Android 13+ 알림 권한 요청
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -48,9 +58,14 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            App()
+            AppWithAds()
         }
     }
+}
+
+@Composable
+fun AppWithAds() {
+    AppWithBottomAd()
 }
 
 @Preview

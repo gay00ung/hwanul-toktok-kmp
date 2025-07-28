@@ -21,8 +21,15 @@ struct ContentView: View {
              Color(red: 0.969, green: 0.976, blue: 0.984)) // Gray100 (#F7FAFC)
                 .ignoresSafeArea(.all)
             
-            ComposeView()
-                .ignoresSafeArea(.keyboard) // Compose has own keyboard handler
+            VStack(spacing: 0) {
+                // KMP Compose content
+                ComposeView()
+                    .ignoresSafeArea(.keyboard) // Compose has own keyboard handler
+                
+                // Banner ad at bottom
+                BannerAd()
+                    .padding(.bottom, 0) // Sits above tab bar
+            }
         }
     }
 }
