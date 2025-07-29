@@ -13,11 +13,12 @@ import androidx.lifecycle.LifecycleEventObserver
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import net.ifmain.hwanultoktok.kmp.BuildConfig
 
 @Composable
 fun AdBanner(
     modifier: Modifier = Modifier,
-    adUnitId: String = "ca-app-pub-3940256099942544/9214589741" // 테스트 배너 광고 ID
+    adUnitId: String = BuildConfig.ADMOB_BANNER_ID
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current

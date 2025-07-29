@@ -26,6 +26,9 @@
     <key>GADApplicationIdentifier</key>
     <string>$(ADMOB_APP_ID)</string>
     
+    <key>ADMOB_BANNER_ID</key>
+    <string>$(ADMOB_BANNER_ID)</string>
+    
     <key>NSUserTrackingUsageDescription</key>
     <string>맞춤형 광고를 제공하여 더 나은 서비스를 제공하기 위해 사용자의 활동을 추적합니다.</string>
     

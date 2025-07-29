@@ -30,7 +30,7 @@ kotlin {
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
-            baseName = "hwanultoktok_${project.version}"
+            baseName = "ComposeApp"
             isStatic = false
         }
     }
@@ -136,7 +136,12 @@ android {
         
         // AdMob App ID from local.properties
         val admobAppId = localProperties.getProperty("ADMOB_APP_ID") ?: "YOUR_ADMOB_APP_ID_HERE"
+        buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
         manifestPlaceholders["admobAppId"] = admobAppId
+        
+        // AdMob Banner Unit ID from local.properties
+        val admobBannerId = localProperties.getProperty("ADMOB_BANNER_ID") ?: "ca-app-pub-3940256099942544/9214589741"
+        buildConfigField("String", "ADMOB_BANNER_ID", "\"$admobBannerId\"")
     }
     
     buildFeatures {
