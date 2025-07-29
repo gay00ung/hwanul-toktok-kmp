@@ -18,6 +18,7 @@ import net.ifmain.hwanultoktok.kmp.presentation.ui.ExchangeRateScreen
 import net.ifmain.hwanultoktok.kmp.di.commonModule
 import net.ifmain.hwanultoktok.kmp.di.platformModule
 import net.ifmain.hwanultoktok.kmp.ui.AdMobBanner
+import net.ifmain.hwanultoktok.kmp.platform.ApiKeyProvider
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 
@@ -75,7 +76,7 @@ actual fun AppWithAds(modifier: Modifier) {
                     Column {
                         AdMobBanner(
                             modifier = Modifier.fillMaxWidth(),
-                            adUnitId = "ca-app-pub-3940256099942544/2435281174" // iOS test banner ID
+                            adUnitId = ApiKeyProvider.getAdMobBannerId()
                         )
                         
                         NavigationBar(

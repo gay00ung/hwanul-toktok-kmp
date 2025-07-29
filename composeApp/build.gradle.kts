@@ -1,6 +1,11 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.io.FileInputStream
 import java.util.Properties
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -118,7 +123,7 @@ android {
         //noinspection OldTargetApi
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
         
         // Load API key from local.properties
         val localProperties = Properties()
@@ -131,7 +136,12 @@ android {
         
         // AdMob App ID from local.properties
         val admobAppId = localProperties.getProperty("ADMOB_APP_ID") ?: "YOUR_ADMOB_APP_ID_HERE"
+        buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
         manifestPlaceholders["admobAppId"] = admobAppId
+        
+        // AdMob Banner Unit ID from local.properties
+        val admobBannerId = localProperties.getProperty("ADMOB_BANNER_ID") ?: "ca-app-pub-3940256099942544/9214589741"
+        buildConfigField("String", "ADMOB_BANNER_ID", "\"$admobBannerId\"")
     }
     
     buildFeatures {
@@ -142,9 +152,20 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    signingConfigs {
+        create("release") {
+            keyAlias = keystoreProperties["keyAlias"] as String
+            keyPassword = keystoreProperties["keyPassword"] as String
+            storeFile = file(keystoreProperties["storeFile"] as String)
+            storePassword = keystoreProperties["storePassword"] as String
+        }
+    }
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            signingConfig = signingConfigs["release"]
+            isDebuggable = false
+            setProperty("archivesBaseName", "hwanultoktok_${project.version}")
         }
     }
     compileOptions {
@@ -156,4 +177,3 @@ android {
 dependencies {
     debugImplementation(compose.uiTooling)
 }
-
