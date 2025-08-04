@@ -7,8 +7,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         MobileAds.shared.start(completionHandler: nil)
-
         
+        #if DEBUG
+        // 개발 중에만 테스트 디바이스 사용
+        MobileAds.shared.requestConfiguration.testDeviceIdentifiers = ["4d1743bdf8bfa890bce0ca6cd2e072a4"]
+        #endif
+            
         // 백그라운드 태스크 등록
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: "net.ifmain.hwanultoktok.kmp.exchangeRateCheck",

@@ -19,7 +19,7 @@ import net.ifmain.hwanultoktok.kmp.presentation.state.ExchangeRateUiState
 class ExchangeRateViewModel(
     private val getExchangeRatesUseCase: GetExchangeRatesUseCase,
     private val refreshExchangeRatesUseCase: RefreshExchangeRatesUseCase,
-    private val getFavoriteUseCase: GetFavoritesUseCase,
+    getFavoriteUseCase: GetFavoritesUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
 ) : ViewModel() {
 
@@ -27,6 +27,7 @@ class ExchangeRateViewModel(
     val uiState: StateFlow<ExchangeRateUiState> = _uiState.asStateFlow()
 
     init {
+        println("ExchangeRateViewModel: 초기화 시작")
         loadExchangeRates()
         getFavoriteUseCase()
             .onEach { favorites ->
@@ -39,6 +40,7 @@ class ExchangeRateViewModel(
     }
 
     fun loadExchangeRates() {
+        println("ExchangeRateViewModel: loadExchangeRates 호출")
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
@@ -51,6 +53,7 @@ class ExchangeRateViewModel(
                         )
                     }
                     .collect { rates ->
+                        println("ExchangeRateViewModel: 데이터 수신 - ${rates.size}개 환율")
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             exchangeRates = rates,
@@ -68,12 +71,14 @@ class ExchangeRateViewModel(
     }
 
     fun refreshExchangeRates() {
+        println("ExchangeRateViewModel: 새로고침 시작")
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
 
             val result = refreshExchangeRatesUseCase()
             result.fold(
                 onSuccess = { rates ->
+                    println("ExchangeRateViewModel: 새로고침 성공 - ${rates.size}개 환율")
                     _uiState.value = _uiState.value.copy(
                         isRefreshing = false,
                         exchangeRates = rates,

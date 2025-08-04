@@ -15,12 +15,33 @@ struct AdBannerView: UIViewRepresentable {
         }
         
         bannerView.adSize = AdSizeBanner
+        
+        // Coordinator를 델리게이트로 설정
+        let coordinator = context.coordinator
+        bannerView.delegate = coordinator
+        
+        print("AdBanner - 광고 단위 ID: \(adUnitID)")
         return bannerView
     }
     
     func updateUIView(_ uiView: BannerView, context: Context) {
         let request = Request()
+        print("AdBanner - 광고 요청 시작")
         uiView.load(request)
+    }
+    
+    func makeCoordinator() -> AdBannerViewCoordinator {
+        AdBannerViewCoordinator()
+    }
+}
+
+class AdBannerViewCoordinator: NSObject, BannerViewDelegate {
+    func bannerViewDidReceiveAd(_ bannerView: BannerView) {
+        print("AdBanner - 광고 로드 성공")
+    }
+    
+    func bannerView(_ bannerView: BannerView, didFailToReceiveAdWithError error: Error) {
+        print("AdBanner - 광고 로드 실패: \(error.localizedDescription)")
     }
 }
 
