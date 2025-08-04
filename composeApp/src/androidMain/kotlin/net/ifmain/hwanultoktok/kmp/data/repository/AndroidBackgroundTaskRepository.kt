@@ -17,7 +17,6 @@ class AndroidBackgroundTaskRepository(
     }
 
     override suspend fun scheduleExchangeRateCheck(hour: Int, minute: Int) {
-        println("AndroidBackgroundTaskRepository: scheduleExchangeRateCheck 호출 - hour: $hour, minute: $minute")
         val currentTime = Calendar.getInstance()
         val targetTime = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, hour)
@@ -48,7 +47,6 @@ class AndroidBackgroundTaskRepository(
             ExistingPeriodicWorkPolicy.REPLACE,
             workRequest
         )
-        println("AndroidBackgroundTaskRepository: WorkManager 작업 예약 완료 - 초기 대기 시간: ${initialDelay / 1000 / 60}분")
     }
 
     override suspend fun cancelExchangeRateCheck() {
@@ -64,12 +62,9 @@ class AndroidBackgroundTaskRepository(
     }
 
     override suspend fun executeExchangeRateCheck() {
-        println("AndroidBackgroundTaskRepository: executeExchangeRateCheck 호출")
         val workRequest = OneTimeWorkRequestBuilder<ExchangeRateWorker>()
-            .addTag("immediate_check")
             .build()
         WorkManager.getInstance(context).enqueue(workRequest)
-        println("AndroidBackgroundTaskRepository: 즉시 실행 작업 예약 완료")
     }
 
 }

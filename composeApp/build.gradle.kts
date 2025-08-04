@@ -14,7 +14,6 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.sqldelight)
-    id("com.google.gms.google-services")
 }
 
 kotlin {
@@ -60,10 +59,6 @@ kotlin {
             implementation("androidx.work:work-runtime-ktx:2.10.2")
             implementation("com.google.android.gms:play-services-ads:24.4.0")
             implementation("com.google.guava:guava:31.1-android")
-
-            // Firebase
-            implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.0.0"))
-            implementation("com.google.firebase:firebase-analytics")
         }
         
         iosMain.dependencies {

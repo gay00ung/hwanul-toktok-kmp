@@ -12,18 +12,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.context.startKoin
+import net.ifmain.hwanultoktok.kmp.di.commonModule
+import net.ifmain.hwanultoktok.kmp.di.platformModule
 import com.google.android.gms.ads.MobileAds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import net.ifmain.hwanultoktok.kmp.di.commonModule
-import net.ifmain.hwanultoktok.kmp.di.platformModule
-import net.ifmain.hwanultoktok.kmp.domain.usecase.ScheduleExchangeRateCheckUseCase
 import net.ifmain.hwanultoktok.kmp.presentation.AppWithBottomAd
-import org.koin.android.ext.koin.androidContext
+import net.ifmain.hwanultoktok.kmp.domain.usecase.ScheduleExchangeRateCheckUseCase
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import org.koin.core.context.startKoin
 
 class HwanulTokTokApplication : Application(), KoinComponent {
     override fun onCreate() {
@@ -35,7 +35,7 @@ class HwanulTokTokApplication : Application(), KoinComponent {
 
         CoroutineScope(Dispatchers.IO).launch {
             val scheduleUseCase: ScheduleExchangeRateCheckUseCase by inject()
-             scheduleUseCase(11, 30)
+            scheduleUseCase(15)
         }
     }
 }

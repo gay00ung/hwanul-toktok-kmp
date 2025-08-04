@@ -19,6 +19,7 @@ captures
 **/xcshareddata/WorkspaceSettings.xcsettings
 # 민감한 정보가 포함될 수 있는 파일들
 *.xcconfig
+local.properties
 *.keystore
 *.p12
 *.mobileprovision
@@ -29,9 +30,3 @@ secrets.json
 google-services.json
 GoogleService-Info.plist
 keystore.properties
-
-# Firebase
-.firebase/
-firebase-debug.log
-firestore-debug.log
-firebase-debug.*.log
