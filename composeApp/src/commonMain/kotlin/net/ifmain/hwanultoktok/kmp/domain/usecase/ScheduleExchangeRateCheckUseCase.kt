@@ -5,15 +5,11 @@ import net.ifmain.hwanultoktok.kmp.domain.repository.BackgroundTaskRepository
 class ScheduleExchangeRateCheckUseCase(
     private val backgroundTaskRepository: BackgroundTaskRepository
 ) {
-    suspend operator fun invoke(intervalMinutes: Long = 15) {
-        backgroundTaskRepository.scheduleExchangeRateCheck(11, 30)
+    suspend operator fun invoke(hour: Int = 11, minute: Int = 30) {
+        backgroundTaskRepository.scheduleExchangeRateCheck(hour, minute)
     }
 
     suspend fun cancel() {
         backgroundTaskRepository.cancelExchangeRateCheck()
-    }
-
-    suspend fun isScheduled(): Boolean {
-        return backgroundTaskRepository.isExchangeRateCheckScheduled()
     }
 }
