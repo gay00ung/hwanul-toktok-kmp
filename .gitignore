@@ -4,7 +4,6 @@
 **/build/
 xcuserdata
 !src/**/build/
-local.properties
 .idea
 .DS_Store
 iosApp/Configuration/Config.xcconfig
@@ -30,3 +29,8 @@ secrets.json
 google-services.json
 GoogleService-Info.plist
 keystore.properties
+
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
