@@ -2,6 +2,7 @@ package net.ifmain.hwanultoktok.kmp
 
 import android.Manifest
 import android.app.Application
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -65,8 +66,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        setContent {
-            AppWithAds()
+        try {
+            setContent {
+                AppWithAds()
+            }
+        } catch (e: Exception) {
+            // DI 초기화 에러 발생 시 앱 재시작
+            e.printStackTrace()
+            finish()
+            startActivity(Intent(this, MainActivity::class.java))
         }
     }
 }
