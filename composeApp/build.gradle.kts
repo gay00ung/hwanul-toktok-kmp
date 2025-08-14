@@ -57,13 +57,17 @@ kotlin {
             implementation(libs.koin.android)
             implementation(libs.koin.androidx.compose)
             implementation(libs.sqldelight.android.driver)
-            implementation("androidx.work:work-runtime-ktx:2.10.2")
-            implementation("com.google.android.gms:play-services-ads:24.4.0")
-            implementation("com.google.guava:guava:31.1-android")
+            implementation(libs.androidx.work.runtime.ktx)
+            implementation(libs.play.services.ads)
+            implementation(libs.guava)
 
             // Firebase
             implementation(project.dependencies.platform("com.google.firebase:firebase-bom:34.0.0"))
-            implementation("com.google.firebase:firebase-analytics")
+            implementation(libs.firebase.analytics)
+
+            // Glance
+            implementation(libs.androidx.glance.appwidget)
+            implementation(libs.androidx.glance.material3)
         }
         
         iosMain.dependencies {
@@ -127,8 +131,8 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         //noinspection OldTargetApi
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
         
         // Load API key from local.properties
         val localProperties = Properties()

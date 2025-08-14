@@ -36,7 +36,12 @@ class AndroidNotificationService(
         notificationManager.createNotificationChannel(channel)
     }
     init {
-        createNotificationChannel()
+        try {
+            createNotificationChannel()
+        } catch (e: Exception) {
+            // Context가 완전히 준비되지 않은 경우 무시
+            e.printStackTrace()
+        }
     }
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     override suspend fun showNotification(
