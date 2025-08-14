@@ -31,6 +31,7 @@ import kotlinx.coroutines.runBlocking
 import net.ifmain.hwanultoktok.kmp.MainActivity
 import net.ifmain.hwanultoktok.kmp.database.HwanulDatabase
 import net.ifmain.hwanultoktok.kmp.di.DatabaseDriverFactory
+import net.ifmain.hwanultoktok.kmp.util.CurrencyUtils
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -99,67 +100,135 @@ fun FavoriteExchangeRateContent(context: Context) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(GlanceTheme.colors.background)
-            .cornerRadius(16.dp)
-            .padding(16.dp)
+            .background(GlanceTheme.colors.surface)
+            .cornerRadius(20.dp)
+            .padding(0.dp)
             .clickable(actionStartActivity(createAppIntent(context)))
     ) {
-        Text(
-            text = "환율톡톡",
-            style = TextStyle(
-                fontWeight = FontWeight.Bold,
-                color = GlanceTheme.colors.onBackground
-            )
-        )
-        
-        Spacer(modifier = GlanceModifier.height(12.dp))
-
-        favoriteRates.forEach { rate ->
-            ExchangeRateRow(rate)
+        Column(
+            modifier = GlanceModifier
+                .fillMaxWidth()
+                .background(GlanceTheme.colors.primary)
+                .cornerRadius(16.dp)
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = GlanceModifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "💰 환율 톡톡",
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = GlanceTheme.colors.onPrimary
+                    )
+                )
+            }
+            
             Spacer(modifier = GlanceModifier.height(8.dp))
-        }
-        
-        Spacer(modifier = GlanceModifier.height(8.dp))
-
-        Text(
-            text = updateTimeText,
-            style = TextStyle(
-                color = GlanceTheme.colors.onSurfaceVariant
+            
+            Text(
+                text = updateTimeText,
+                style = TextStyle(
+                    color = GlanceTheme.colors.onPrimary
+                )
             )
-        )
+        }
+
+        Column(
+            modifier = GlanceModifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            favoriteRates.forEachIndexed { index, rate ->
+                ExchangeRateCard(rate)
+                if (index < favoriteRates.size - 1) {
+                    Spacer(modifier = GlanceModifier.height(12.dp))
+                }
+            }
+            
+            if (favoriteRates.isEmpty()) {
+                Column(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "📊",
+                        style = TextStyle()
+                    )
+                    Spacer(modifier = GlanceModifier.height(8.dp))
+                    Text(
+                        text = "즐겨찾기한 환율이 없습니다",
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onSurfaceVariant
+                        )
+                    )
+                    Text(
+                        text = "앱에서 환율을 즐겨찾기에 추가해보세요",
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onSurfaceVariant
+                        )
+                    )
+                }
+            }
+        }
     }
 }
 
 @Composable
-fun ExchangeRateRow(data: ExchangeRateData) {
-    Row(
-        modifier = GlanceModifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+fun ExchangeRateCard(data: ExchangeRateData) {
+    Column(
+        modifier = GlanceModifier
+            .fillMaxWidth()
+            .background(GlanceTheme.colors.surfaceVariant)
+            .cornerRadius(12.dp)
+            .padding(12.dp)
     ) {
-        Text(
-            text = data.currencyCode,
-            style = TextStyle(
-                fontWeight = FontWeight.Medium,
-                color = GlanceTheme.colors.onBackground
-            )
-        )
-        
-        Spacer(modifier = GlanceModifier.width(8.dp))
+        Row(
+            modifier = GlanceModifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = CurrencyUtils.getCurrencyEmoji(data.currencyCode) + " " + data.currencyCode,
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = GlanceTheme.colors.onSurface
+                    )
+                )
+                Text(
+                    text = CurrencyUtils.getCurrencyName(data.currencyCode),
+                    style = TextStyle(
+                        color = GlanceTheme.colors.onSurfaceVariant
+                    )
+                )
+            }
+            
+            Spacer(modifier = GlanceModifier.defaultWeight())
 
-        Text(
-            text = data.rate,
-            style = TextStyle(
-                color = GlanceTheme.colors.onBackground
-            ),
-            modifier = GlanceModifier.defaultWeight()
-        )
-        
-        Text(
-            text = data.change,
-            style = TextStyle(
-                color = GlanceTheme.colors.primary
-            )
-        )
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = data.rate,
+                    style = TextStyle(
+                        fontWeight = FontWeight.Bold,
+                        color = GlanceTheme.colors.onSurface
+                    )
+                )
+                if (data.change.isNotEmpty()) {
+                    Text(
+                        text = data.change,
+                        style = TextStyle(
+                            color = if (data.change.startsWith("▲")) 
+                                GlanceTheme.colors.error 
+                            else 
+                                GlanceTheme.colors.primary
+                        )
+                    )
+                }
+            }
+        }
     }
 }
 
