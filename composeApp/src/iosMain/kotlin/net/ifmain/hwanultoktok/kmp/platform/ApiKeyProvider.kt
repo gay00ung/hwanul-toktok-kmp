@@ -9,8 +9,8 @@ object ApiKeyProvider {
     }
     
     fun getHolidayApiKey(): String {
-        return NSBundle.mainBundle.objectForInfoDictionaryKey("holidayApiKeyEncoding") as? String
-            ?: "YOUR_HOLIDAY_API_KEY_HERE"
+        return NSBundle.mainBundle.objectForInfoDictionaryKey("KOREA_HOLIDAY_API_KEY_ENCODING") as? String
+            ?: "KOREA_HOLIDAY_API_KEY_DECODING"
     }
     
     fun getAdMobBannerId(): String {
