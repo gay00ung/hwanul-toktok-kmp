@@ -6,11 +6,16 @@ import net.ifmain.hwanultoktok.kmp.data.mapper.toDomain
 import net.ifmain.hwanultoktok.kmp.data.remote.KoreaExImBankApi
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRate
 import net.ifmain.hwanultoktok.kmp.domain.repository.ExchangeRateRepository
-import net.ifmain.hwanultoktok.kmp.util.getExchangeRateSearchDate
+import net.ifmain.hwanultoktok.kmp.domain.repository.HolidayRepository
+import net.ifmain.hwanultoktok.kmp.domain.usecase.GetHolidaysUseCase
+import net.ifmain.hwanultoktok.kmp.util.getDataBaseDate
+import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithoutHoliday
+import net.ifmain.hwanultoktok.kmp.util.getCurrentDateTime
 
 class ExchangeRateRepositoryImpl(
     private val api: KoreaExImBankApi,
-    private val apiKey: String
+    private val apiKey: String,
+    private val holidayRepository: HolidayRepository
 ) : ExchangeRateRepository {
 
     private var cachedRates: List<ExchangeRate> = emptyList()
@@ -36,8 +41,19 @@ class ExchangeRateRepositoryImpl(
 
     override suspend fun refreshExchangeRates(): Result<List<ExchangeRate>> {
         return try {
-            val searchDate = getExchangeRateSearchDate()
-            println("ExchangeRateRepositoryImpl: API 요청 시작 - 날짜: $searchDate")
+            val now = getCurrentDateTime()
+            
+            // 공휴일을 고려한 정확한 날짜 계산
+            val dataDate = try {
+                getDataBaseDate(now, createGetHolidaysUseCase())
+            } catch (e: Exception) {
+                // 공휴일 API 실패시 기본 로직으로 fallback
+                println("ExchangeRateRepositoryImpl: 공휴일 API 실패, 기본 로직 사용 - ${e.message}")
+                getDataBaseDateWithoutHoliday(now)
+            }
+            
+            val searchDate = dataDate.toString().replace("-", "")
+            println("ExchangeRateRepositoryImpl: API 요청 시작 - 날짜: $searchDate (공휴일 고려)")
             val response = api.getExchangeRates(apiKey, searchDate)
             println("ExchangeRateRepositoryImpl: API 응답 받음 - ${response.size}개 데이터")
             val exchangeRates = response.map { it.toDomain() }
@@ -57,5 +73,10 @@ class ExchangeRateRepositoryImpl(
 
     override suspend fun savePreviousExchangeRates(rates: List<ExchangeRate>) {
         previousExchangeRates = rates
+    }
+    
+    // HolidayRepository를 GetHolidaysUseCase로 변환하는 헬퍼 함수
+    private fun createGetHolidaysUseCase(): GetHolidaysUseCase {
+        return GetHolidaysUseCase(holidayRepository)
     }
 }

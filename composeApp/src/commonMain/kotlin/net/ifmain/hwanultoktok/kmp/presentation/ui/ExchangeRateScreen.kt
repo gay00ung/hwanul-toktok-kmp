@@ -37,7 +37,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.ExchangeRateViewModel
-import net.ifmain.hwanultoktok.kmp.util.formatDateTime
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,9 +103,9 @@ fun ExchangeRateScreen(
                         modifier = Modifier.padding(top = 8.dp)
                     )
 
-                    uiState.lastUpdateTime?.let { updateTime ->
+                    uiState.formattedDataDate?.let { formattedDate ->
                         Text(
-                            text = formatDateTime(updateTime),
+                            text = formattedDate,
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 4.dp)

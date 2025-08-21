@@ -10,7 +10,7 @@ import net.ifmain.hwanultoktok.kmp.domain.repository.ExchangeRateRepository
 class MonitorExchangeRateUseCase(
     private val exchangeRateRepository: ExchangeRateRepository
 ) {
-    suspend operator fun invoke(): Flow<List<ExchangeRateChange>> = flow {
+    operator fun invoke(): Flow<List<ExchangeRateChange>> = flow {
         val currentRates = exchangeRateRepository.getExchangeRates().first()
         val previousRates = exchangeRateRepository.getPreviousExchangeRates()
 

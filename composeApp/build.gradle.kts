@@ -151,6 +151,12 @@ android {
         // AdMob Banner Unit ID from local.properties
         val admobBannerId = localProperties.getProperty("ADMOB_BANNER_ID") ?: "ca-app-pub-3940256099942544/9214589741"
         buildConfigField("String", "ADMOB_BANNER_ID", "\"$admobBannerId\"")
+
+        // Korea Holiday API keys from local.properties
+        val holidayApiKeyEncoding = localProperties.getProperty("KOREA_HOLIDAY_API_KEY_ENCODING") ?: localProperties.getProperty("KOREA_HOLIDAY_API_KEY_DECODING")
+        buildConfigField("String", "KOREA_HOLIDAY_API_KEY_ENCODING", "\"$holidayApiKeyEncoding\"")
+        val holidayApiKeyDecoding = localProperties.getProperty("KOREA_HOLIDAY_API_KEY_DECODING") ?: localProperties.getProperty("KOREA_HOLIDAY_API_KEY_ENCODING")
+        buildConfigField("String", "KOREA_HOLIDAY_API_KEY_DECODING", "\"$holidayApiKeyDecoding\"")
     }
     
     buildFeatures {
