@@ -16,6 +16,7 @@ data class ExchangeRateUiState(
     val favoriteIds: Set<String> = emptySet(),
     val showFavoritesOnly: Boolean = false,
     val lastUpdateTime: LocalDateTime? = null,
+    val formattedDataDate: String? = null,
 ) {
     val filteredExchangeRates: List<ExchangeRate>
         get() = exchangeRates.filter { rate ->

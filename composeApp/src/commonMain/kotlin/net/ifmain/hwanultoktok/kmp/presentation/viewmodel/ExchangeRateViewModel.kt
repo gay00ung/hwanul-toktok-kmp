@@ -10,17 +10,23 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.number
 import net.ifmain.hwanultoktok.kmp.domain.usecase.GetExchangeRatesUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.GetFavoritesUseCase
+import net.ifmain.hwanultoktok.kmp.domain.usecase.GetHolidaysUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.RefreshExchangeRatesUseCase
 import net.ifmain.hwanultoktok.kmp.domain.usecase.ToggleFavoriteUseCase
 import net.ifmain.hwanultoktok.kmp.presentation.state.ExchangeRateUiState
+import net.ifmain.hwanultoktok.kmp.util.formatDateTime
+import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithoutHoliday
 
 class ExchangeRateViewModel(
     private val getExchangeRatesUseCase: GetExchangeRatesUseCase,
     private val refreshExchangeRatesUseCase: RefreshExchangeRatesUseCase,
     getFavoriteUseCase: GetFavoritesUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
+    private val getHolidaysUseCase: GetHolidaysUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ExchangeRateUiState())
@@ -54,12 +60,17 @@ class ExchangeRateViewModel(
                     }
                     .collect { rates ->
                         println("ExchangeRateViewModel: 데이터 수신 - ${rates.size}개 환율")
+                        val updateTime = rates.firstOrNull()?.timestamp
+
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             exchangeRates = rates,
                             errorMessage = null,
-                            lastUpdateTime = rates.firstOrNull()?.timestamp
+                            lastUpdateTime = updateTime
                         )
+
+                        // 공휴일을 고려한 실제 데이터 기준일 계산
+                        updateTime?.let { updateFormattedDataDate(it) }
                     }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -79,12 +90,17 @@ class ExchangeRateViewModel(
             result.fold(
                 onSuccess = { rates ->
                     println("ExchangeRateViewModel: 새로고침 성공 - ${rates.size}개 환율")
+                    val updateTime = rates.firstOrNull()?.timestamp
+
                     _uiState.value = _uiState.value.copy(
                         isRefreshing = false,
                         exchangeRates = rates,
                         errorMessage = null,
-                        lastUpdateTime = rates.firstOrNull()?.timestamp
+                        lastUpdateTime = updateTime
                     )
+
+                    // 공휴일을 고려한 실제 데이터 기준일 계산
+                    updateTime?.let { updateFormattedDataDate(it) }
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
@@ -105,6 +121,7 @@ class ExchangeRateViewModel(
         }
         _uiState.value = _uiState.value.copy(selectedCurrencies = currentSelected)
     }
+
     fun toggleFavorite(currencyCode: String) {
         viewModelScope.launch {
             toggleFavoriteUseCase(
@@ -113,9 +130,29 @@ class ExchangeRateViewModel(
             )
         }
     }
+
     fun toggleFavoritesFilter() {
         _uiState.update { currentState ->
             currentState.copy(showFavoritesOnly = !currentState.showFavoritesOnly)
+        }
+    }
+
+    private fun updateFormattedDataDate(updateTime: LocalDateTime) {
+        viewModelScope.launch {
+            try {
+                val formattedDate = formatDateTime(updateTime, getHolidaysUseCase)
+                _uiState.update { currentState ->
+                    currentState.copy(formattedDataDate = formattedDate)
+                }
+            } catch (e: Exception) {
+                // 공휴일 데이터 로드 실패시 기본 포맷 사용 (공휴일 체크 없이)
+                val dataDate = getDataBaseDateWithoutHoliday(updateTime)
+                val basicFormat =
+                    "${dataDate.year}년 ${dataDate.month.number}월 ${dataDate.day}일 고시환율"
+                _uiState.update { currentState ->
+                    currentState.copy(formattedDataDate = basicFormat)
+                }
+            }
         }
     }
 
