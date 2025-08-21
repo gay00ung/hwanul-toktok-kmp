@@ -64,10 +64,10 @@ fun getDataBaseDateWithoutHoliday(updateTime: LocalDateTime): LocalDate {
 
 suspend fun isHoliday(date: LocalDate, getHolidaysUseCase: GetHolidaysUseCase): Boolean {
     val holidays = getHolidaysUseCase(date.year, date.month.number).getOrNull() ?: return false
-    val dateString = "${date.year}${date.month.number.toString().padStart(2, '0')}${
+    val dateLong = "${date.year}${date.month.number.toString().padStart(2, '0')}${
         date.day.toString().padStart(2, '0')
-    }"
-    return holidays.any { it.locdate == dateString && it.isHoliday }
+    }".toLong()
+    return holidays.any { it.locdate == dateLong && it.isHoliday == "Y" }
 }
 
 fun isWeekend(data: LocalDate): Boolean {

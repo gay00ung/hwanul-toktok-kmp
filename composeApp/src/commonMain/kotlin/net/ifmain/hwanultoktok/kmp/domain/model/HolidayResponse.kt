@@ -1,40 +1,43 @@
 package net.ifmain.hwanultoktok.kmp.domain.model
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 @Serializable
-data class HolidayResponse(
-    @SerialName("resultCode")
-    val resultCode: Int,
+data class HolidayApiResponse(
+    val response: HolidayResponseWrapper
+)
 
-    @SerialName("resultMsg")
-    val resultMsg: String,
+@Serializable
+data class HolidayResponseWrapper(
+    val header: HolidayHeader,
+    val body: HolidayBody
+)
 
-    @SerialName("Item")
-    val items: List<HolidayItem>,
+@Serializable
+data class HolidayHeader(
+    val resultCode: String,
+    val resultMsg: String
+)
 
-    @SerialName("numOfRows")
-    val numOfRows: Int = 10,
-
-    @SerialName("pageNo")
-    val pageNo: Int = 1,
-
-    @SerialName("totalCount")
+@Serializable
+data class HolidayBody(
+    val items: HolidayItemsWrapper,
+    val numOfRows: Int,
+    val pageNo: Int,
     val totalCount: Int
 )
 
 @Serializable
+data class HolidayItemsWrapper(
+    val item: JsonElement
+)
+
+@Serializable
 data class HolidayItem(
-    @SerialName("locdate")
-    val locdate: String,
-
-    @SerialName("seq")
-    val seq: Int,
-
-    @SerialName("isHoliday")
-    val isHoliday: Boolean,
-
-    @SerialName("dateName")
+    val dateKind: String,
     val dateName: String,
+    val isHoliday: String, // "Y" 또는 "N"
+    val locdate: Long,
+    val seq: Int
 )
