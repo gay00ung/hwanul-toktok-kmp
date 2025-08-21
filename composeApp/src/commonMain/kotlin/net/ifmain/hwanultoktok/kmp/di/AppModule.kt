@@ -38,7 +38,7 @@ val commonModule = module {
     single { ScheduleExchangeRateCheckUseCase(get()) }
 
 
-    single<ExchangeRateRepository> { ExchangeRateRepositoryImpl(get(), get()) }
+    single<ExchangeRateRepository> { ExchangeRateRepositoryImpl(get(), get(), get()) }
     single<AlertRepository> { AlertRepositoryImpl(get()) }
     single<FavoriteRepository> { FavoriteRepositoryImpl(get()) }
     single<HolidayRepository> { HolidayRepositoryImpl(get(), get(named("holidayApiKey"))) }
