@@ -7,6 +7,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRate
 import androidx.core.content.edit
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.number
 
 /**
  *
@@ -41,6 +43,14 @@ object WidgetUpdateHelper {
             }
 
             putLong("last_update_time", System.currentTimeMillis())
+            
+            // 실제 데이터 날짜 저장 (앱과 위젯 동기화용)
+            rates.firstOrNull()?.timestamp?.let { timestamp ->
+                val year = timestamp.year
+                val month = timestamp.month.number
+                val day = timestamp.day
+                putString("actual_data_date", "$year-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}")
+            }
         }
 
         CoroutineScope(Dispatchers.IO).launch {

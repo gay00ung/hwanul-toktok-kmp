@@ -58,10 +58,18 @@ fun FavoriteExchangeRateContent(context: Context) {
     val database = HwanulDatabase(DatabaseDriverFactory(context).createDriver())
     val prefs = context.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
 
-    val lastUpdateTime = prefs.getLong("last_update_time", 0L)
-    val updateTimeText = if (lastUpdateTime > 0) {
-        val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.KOREA)
-        "${dateFormat.format(Date(lastUpdateTime))} 고시환율"
+    // 실제 데이터 날짜 사용 (앱과 동기화)
+    val actualDataDate = prefs.getString("actual_data_date", null)
+    val updateTimeText = if (actualDataDate != null) {
+        try {
+            val parts = actualDataDate.split("-")
+            val year = parts[0]
+            val month = parts[1]
+            val day = parts[2]
+            "${year}년 ${month}월 ${day}일 고시환율"
+        } catch (e: Exception) {
+            "-- 고시환율"
+        }
     } else {
         "-- 고시환율"
     }
