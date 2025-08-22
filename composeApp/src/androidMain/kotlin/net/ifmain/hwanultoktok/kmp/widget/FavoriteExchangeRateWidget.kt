@@ -8,9 +8,12 @@ import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.GlanceTheme
+import androidx.glance.action.ActionParameters
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.ActionCallback
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
@@ -23,6 +26,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
+import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
@@ -31,9 +35,6 @@ import net.ifmain.hwanultoktok.kmp.MainActivity
 import net.ifmain.hwanultoktok.kmp.database.HwanulDatabase
 import net.ifmain.hwanultoktok.kmp.di.DatabaseDriverFactory
 import net.ifmain.hwanultoktok.kmp.util.CurrencyUtils
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 /**
  *
@@ -58,10 +59,18 @@ fun FavoriteExchangeRateContent(context: Context) {
     val database = HwanulDatabase(DatabaseDriverFactory(context).createDriver())
     val prefs = context.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
 
-    val lastUpdateTime = prefs.getLong("last_update_time", 0L)
-    val updateTimeText = if (lastUpdateTime > 0) {
-        val dateFormat = SimpleDateFormat("yyyy/MM/dd", Locale.KOREA)
-        "${dateFormat.format(Date(lastUpdateTime))} 고시환율"
+    // 실제 데이터 날짜 사용 (앱과 동기화)
+    val actualDataDate = prefs.getString("actual_data_date", null)
+    val updateTimeText = if (actualDataDate != null) {
+        try {
+            val parts = actualDataDate.split("-")
+            val year = parts[0]
+            val month = parts[1]
+            val day = parts[2]
+            "${year}년 ${month}월 ${day}일 고시환율"
+        } catch (e: Exception) {
+            "-- 고시환율"
+        }
     } else {
         "-- 고시환율"
     }
@@ -81,7 +90,7 @@ fun FavoriteExchangeRateContent(context: Context) {
                     rate < previousRate -> "▼ ${String.format("%.2f", previousRate - rate)}"
                     else -> "- 0.00"
                 }
-                
+
                 ExchangeRateData(
                     currencyCode = favorite.toCurrencyCode,
                     rate = if (rate > 0) String.format("%.2f", rate) else "---",
@@ -95,7 +104,7 @@ fun FavoriteExchangeRateContent(context: Context) {
             )
         }
     }
-    
+
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
@@ -115,23 +124,39 @@ fun FavoriteExchangeRateContent(context: Context) {
                 modifier = GlanceModifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "💰 환율 톡톡",
-                    style = TextStyle(
-                        fontWeight = FontWeight.Bold,
-                        color = GlanceTheme.colors.onPrimary
+                Column(
+                    modifier = GlanceModifier.defaultWeight()
+                ) {
+                    Text(
+                        text = "💰 환율 톡톡",
+                        style = TextStyle(
+                            fontWeight = FontWeight.Bold,
+                            color = GlanceTheme.colors.onPrimary
+                        )
                     )
+
+                    Spacer(modifier = GlanceModifier.height(4.dp))
+
+                    Text(
+                        text = updateTimeText,
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onPrimary
+                        )
+                    )
+                }
+
+                Text(
+                    text = "⟳",
+                    style = TextStyle(
+                        color = GlanceTheme.colors.onPrimary,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = GlanceModifier
+                        .size(32.dp)
+                        .clickable(actionRunCallback<RefreshWidgetCallback>())
+                        .padding(4.dp)
                 )
             }
-            
-            Spacer(modifier = GlanceModifier.height(8.dp))
-            
-            Text(
-                text = updateTimeText,
-                style = TextStyle(
-                    color = GlanceTheme.colors.onPrimary
-                )
-            )
         }
 
         Column(
@@ -145,7 +170,7 @@ fun FavoriteExchangeRateContent(context: Context) {
                     Spacer(modifier = GlanceModifier.height(12.dp))
                 }
             }
-            
+
             if (favoriteRates.isEmpty()) {
                 Column(
                     modifier = GlanceModifier.fillMaxWidth(),
@@ -202,7 +227,7 @@ fun ExchangeRateCard(data: ExchangeRateData) {
                     )
                 )
             }
-            
+
             Spacer(modifier = GlanceModifier.defaultWeight())
 
             Column(
@@ -219,9 +244,9 @@ fun ExchangeRateCard(data: ExchangeRateData) {
                     Text(
                         text = data.change,
                         style = TextStyle(
-                            color = if (data.change.startsWith("▲")) 
-                                GlanceTheme.colors.error 
-                            else 
+                            color = if (data.change.startsWith("▲"))
+                                GlanceTheme.colors.error
+                            else
                                 GlanceTheme.colors.primary
                         )
                     )
@@ -244,5 +269,21 @@ private fun createAppIntent(context: Context): Intent {
     return Intent(context, MainActivity::class.java).apply {
         flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         putExtra("from_widget", true)
+    }
+}
+
+/**
+ * 위젯 새로고침 콜백
+ */
+class RefreshWidgetCallback : ActionCallback {
+    override suspend fun onAction(
+        context: Context,
+        glanceId: GlanceId,
+        parameters: ActionParameters
+    ) {
+        val intent = Intent(context, FavoriteExchangeRateWidgetReceiver::class.java).apply {
+            action = FavoriteExchangeRateWidgetReceiver.ACTION_REFRESH
+        }
+        context.sendBroadcast(intent)
     }
 }

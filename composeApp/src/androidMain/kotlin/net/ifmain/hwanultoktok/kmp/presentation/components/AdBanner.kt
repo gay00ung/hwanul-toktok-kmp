@@ -3,16 +3,18 @@ package net.ifmain.hwanultoktok.kmp.presentation.components
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
+import kotlinx.coroutines.delay
 import net.ifmain.hwanultoktok.kmp.BuildConfig
 
 @Composable
@@ -22,7 +24,7 @@ fun AdBanner(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    
+
     val adView = remember {
         AdView(context).apply {
             this.adUnitId = adUnitId
@@ -42,7 +44,6 @@ fun AdBanner(
         
         lifecycleOwner.lifecycle.addObserver(observer)
         
-        // 광고 로드
         val adRequest = AdRequest.Builder().build()
         adView.loadAd(adRequest)
         
@@ -51,7 +52,15 @@ fun AdBanner(
             adView.destroy()
         }
     }
-    
+
+    LaunchedEffect(adView) {
+        while (true) {
+            delay(30000)
+            val refreshRequest = AdRequest.Builder().build()
+            adView.loadAd(refreshRequest)
+        }
+    }
+
     AndroidView(
         factory = { adView },
         modifier = modifier.fillMaxWidth()
