@@ -1,14 +1,13 @@
 package net.ifmain.hwanultoktok.kmp.widget
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.glance.appwidget.updateAll
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRate
-import androidx.core.content.edit
-import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.number
+import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRate
 
 /**
  *
