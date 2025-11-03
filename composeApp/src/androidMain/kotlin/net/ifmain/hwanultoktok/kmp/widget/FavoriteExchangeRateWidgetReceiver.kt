@@ -60,7 +60,7 @@ class FavoriteExchangeRateWidgetReceiver : GlanceAppWidgetReceiver() {
                 val response = api.getExchangeRates(apiKey, searchDate)
                 val exchangeRates = response.map { it.toDomain() }
 
-                WidgetUpdateHelper.saveExchangeRatesAndUpdateWidget(context, exchangeRates)
+                WidgetUpdateHelper.saveExchangeRatesAndUpdateWidget(context, exchangeRates, dataDate)
 
             } catch (e: Exception) {
                 e.printStackTrace()

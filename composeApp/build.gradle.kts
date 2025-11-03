@@ -131,8 +131,8 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         //noinspection OldTargetApi
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 5
-        versionName = "1.0.4"
+        versionCode = 6
+        versionName = "1.0.5"
         
         // Load API key from local.properties
         val localProperties = Properties()
@@ -151,6 +151,10 @@ android {
         // AdMob Banner Unit ID from local.properties
         val admobBannerId = localProperties.getProperty("ADMOB_BANNER_ID") ?: "ca-app-pub-3940256099942544/9214589741"
         buildConfigField("String", "ADMOB_BANNER_ID", "\"$admobBannerId\"")
+
+        // AdMob Interstitial Unit ID from local.properties
+        val admobInterstitialId = localProperties.getProperty("ADMOB_INTERSTITIAL_ID") ?: "ca-app-pub-3940256099942544/1033173712"
+        buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"$admobInterstitialId\"")
 
         // Korea Holiday API keys from local.properties
         val holidayApiKeyEncoding = localProperties.getProperty("KOREA_HOLIDAY_API_KEY_ENCODING") ?: localProperties.getProperty("KOREA_HOLIDAY_API_KEY_DECODING")

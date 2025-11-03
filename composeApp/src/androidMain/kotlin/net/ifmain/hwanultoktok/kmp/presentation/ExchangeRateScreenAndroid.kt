@@ -9,6 +9,8 @@ import androidx.compose.ui.platform.LocalContext
 import net.ifmain.hwanultoktok.kmp.presentation.ui.ExchangeRateScreen
 import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.ExchangeRateViewModel
 import net.ifmain.hwanultoktok.kmp.widget.WidgetUpdateHelper
+import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithoutHoliday
+import net.ifmain.hwanultoktok.kmp.util.getCurrentDateTime
 import org.koin.androidx.compose.koinViewModel
 
 /**
@@ -27,9 +29,12 @@ fun ExchangeRateScreenWithWidget(modifier: Modifier = Modifier) {
 
     LaunchedEffect(uiState.exchangeRates) {
         if (uiState.exchangeRates.isNotEmpty()) {
+            val updateTime = uiState.exchangeRates.firstOrNull()?.timestamp ?: getCurrentDateTime()
+            val dataDate = getDataBaseDateWithoutHoliday(updateTime)
             WidgetUpdateHelper.saveExchangeRatesAndUpdateWidget(
                 context,
-                uiState.exchangeRates
+                uiState.exchangeRates,
+                dataDate
             )
         }
     }

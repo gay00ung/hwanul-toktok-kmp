@@ -2,6 +2,8 @@ package net.ifmain.hwanultoktok.kmp.presentation.viewmodel
 
 import android.content.Context
 import net.ifmain.hwanultoktok.kmp.widget.WidgetUpdateHelper
+import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithoutHoliday
+import net.ifmain.hwanultoktok.kmp.util.getCurrentDateTime
 
 /**
  *
@@ -16,7 +18,9 @@ import net.ifmain.hwanultoktok.kmp.widget.WidgetUpdateHelper
 fun ExchangeRateViewModel.setupWidgetUpdate(context: Context) {
     uiState.value.exchangeRates.let { rates ->
         if (rates.isNotEmpty()) {
-            WidgetUpdateHelper.saveExchangeRatesAndUpdateWidget(context, rates)
+            val updateTime = rates.firstOrNull()?.timestamp ?: getCurrentDateTime()
+            val dataDate = getDataBaseDateWithoutHoliday(updateTime)
+            WidgetUpdateHelper.saveExchangeRatesAndUpdateWidget(context, rates, dataDate)
         }
     }
 }
@@ -29,7 +33,9 @@ fun ExchangeRateViewModel.refreshWithWidget(context: Context) {
 
     uiState.value.exchangeRates.let { rates ->
         if (rates.isNotEmpty()) {
-            WidgetUpdateHelper.saveExchangeRatesAndUpdateWidget(context, rates)
+            val updateTime = rates.firstOrNull()?.timestamp ?: getCurrentDateTime()
+            val dataDate = getDataBaseDateWithoutHoliday(updateTime)
+            WidgetUpdateHelper.saveExchangeRatesAndUpdateWidget(context, rates, dataDate)
         }
     }
 }
