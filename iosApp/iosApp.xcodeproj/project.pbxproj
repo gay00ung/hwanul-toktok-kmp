@@ -8,8 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		A5E277CC2E364DED004F9228 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A5E277CB2E364DED004F9228 /* GoogleMobileAds */; };
-		A5F936E22E370EBD00D5D6CB /* ComposeApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A5F936E12E370EBD00D5D6CB /* ComposeApp.framework */; };
-		A5F936E32E370EBD00D5D6CB /* ComposeApp.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A5F936E12E370EBD00D5D6CB /* ComposeApp.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -19,7 +17,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				A5F936E32E370EBD00D5D6CB /* ComposeApp.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -27,12 +24,11 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		A5F936E12E370EBD00D5D6CB /* ComposeApp.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ComposeApp.framework; path = "../composeApp/build/xcode-frameworks/Debug/iphoneos18.5/ComposeApp.framework"; sourceTree = "<group>"; };
 		B9DA97B12DC1472C00A4DA20 /* HwanulTokTok.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HwanulTokTok.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		B99700CA2DC9B8D800C7335B /* Exceptions for "iosApp" folder in "iosApp" target */ = {
+		B99700CA2DC9B8D800C7335B /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -45,7 +41,7 @@
 		B9DA97B32DC1472C00A4DA20 /* iosApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				B99700CA2DC9B8D800C7335B /* Exceptions for "iosApp" folder in "iosApp" target */,
+				B99700CA2DC9B8D800C7335B /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -62,7 +58,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A5F936E22E370EBD00D5D6CB /* ComposeApp.framework in Frameworks */,
 				A5E277CC2E364DED004F9228 /* GoogleMobileAds in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -73,7 +68,6 @@
 		58B511D21A9E6C8500147676 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				A5F936E12E370EBD00D5D6CB /* ComposeApp.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
