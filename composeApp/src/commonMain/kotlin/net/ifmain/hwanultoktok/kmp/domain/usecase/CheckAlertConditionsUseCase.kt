@@ -17,24 +17,28 @@ class CheckAlertConditionsUseCase(
         return alerts.mapNotNull { alert ->
             if (!alert.isEnabled) return@mapNotNull null
             
-            val currentRate = exchangeRates.find { 
+            val exchangeRate = exchangeRates.find {
                 it.currencyCode == alert.currencyCode 
-            }?.baseRate ?: return@mapNotNull null
+            } ?: return@mapNotNull null
+            val currentRate = exchangeRate.baseRate
             
             val shouldTrigger = when (alert.alertType) {
                 AlertType.ABOVE -> currentRate >= alert.targetRate
                 AlertType.BELOW -> currentRate <= alert.targetRate
             }
             
-            // 매일 한 번만 체크하므로 중복 알림 방지 불필요
-            val shouldSend = shouldTrigger
+            if (!shouldTrigger && !alert.isArmed) {
+                alertRepository.setArmed(alert.id, isArmed = true)
+            }
+
+            val shouldSend = shouldTrigger && alert.isArmed
             
             AlertCheckResult(
                 alert = alert,
                 shouldTrigger = shouldSend,
                 currentRate = currentRate,
                 message = if (shouldSend) {
-                    "${alert.currencyCode} 환율이 ${alert.targetRate}에 도달했습니다. 현재: $currentRate"
+                    "${exchangeRate.currencyUnit} 환율이 ${alert.targetRate}에 도달했습니다. 현재: $currentRate"
                 } else ""
             )
         }

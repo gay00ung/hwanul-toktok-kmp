@@ -123,10 +123,10 @@ class IosBackgroundTaskRepository(
                         notificationId = result.alert.id.hashCode()
                     )
                     
-                    // 마지막 알림 시간 업데이트
-                    alertRepository.updateLastTriggeredTime(
+                    // 알림 게시 성공 후 조건이 해제될 때까지 재발송 방지
+                    alertRepository.setArmed(
                         alertId = result.alert.id,
-                        timestamp = NSDate().timeIntervalSince1970.toLong() * 1000
+                        isArmed = false,
                     )
                 }
             } catch (e: Exception) {

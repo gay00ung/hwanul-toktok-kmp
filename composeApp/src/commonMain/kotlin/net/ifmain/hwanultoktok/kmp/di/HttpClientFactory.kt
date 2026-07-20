@@ -10,9 +10,13 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
 expect fun createPlatformHttpClient(): HttpClient
+expect val isNetworkLoggingEnabled: Boolean
 
-fun createHttpClient(): HttpClient {
-    return createPlatformHttpClient().config {
+fun createHttpClient(
+    platformClient: HttpClient = createPlatformHttpClient(),
+    enableNetworkLogging: Boolean = isNetworkLoggingEnabled,
+): HttpClient {
+    return platformClient.config {
         install(ContentNegotiation) {
             json(Json {
                 ignoreUnknownKeys = true
@@ -21,9 +25,11 @@ fun createHttpClient(): HttpClient {
             })
         }
         
-        install(Logging) {
-            logger = Logger.SIMPLE
-            level = LogLevel.BODY
+        if (enableNetworkLogging) {
+            install(Logging) {
+                logger = Logger.SIMPLE
+                level = LogLevel.BODY
+            }
         }
     }
 }

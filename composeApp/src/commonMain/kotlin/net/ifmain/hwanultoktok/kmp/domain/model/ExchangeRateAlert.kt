@@ -10,7 +10,8 @@ data class ExchangeRateAlert(
     val alertType: AlertType,
     val targetRate: Double,
     val isEnabled: Boolean = true,
-    val createdAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    val isArmed: Boolean = true,
 )
 
 enum class AlertType {

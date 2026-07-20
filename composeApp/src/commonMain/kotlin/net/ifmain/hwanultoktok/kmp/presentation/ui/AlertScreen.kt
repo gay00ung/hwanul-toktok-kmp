@@ -62,6 +62,7 @@ import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRateAlert
 import net.ifmain.hwanultoktok.kmp.presentation.ads.rememberInterstitialAdController
 import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.AlertViewModel
 import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.ExchangeRateViewModel
+import net.ifmain.hwanultoktok.kmp.util.CurrencyUtils
 import net.ifmain.hwanultoktok.kmp.util.format
 import org.koin.compose.koinInject
 
@@ -73,8 +74,16 @@ fun AlertScreen(
     exchangeRateViewModel: ExchangeRateViewModel = koinInject()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val exchangeRateUiState by exchangeRateViewModel.uiState.collectAsStateWithLifecycle()
     var showAddAlertDialog by remember { mutableStateOf(false) }
     val interstitialController = rememberInterstitialAdController()
+    val currencyUnitsByCode = exchangeRateUiState.exchangeRates.associate { rate ->
+        rate.currencyCode to rate.currencyUnit
+    }
+
+    LaunchedEffect(exchangeRateViewModel) {
+        exchangeRateViewModel.initialize()
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -169,6 +178,8 @@ fun AlertScreen(
                     items(uiState.alerts) { alert ->
                         AlertCard(
                             alert = alert,
+                            currencyUnit = currencyUnitsByCode[alert.currencyCode]
+                                ?: CurrencyUtils.getOfficialCurrencyUnit(alert.currencyCode),
                             onDeleteClick = { viewModel.deleteAlert(alert.id) }
                         )
                     }
@@ -243,6 +254,7 @@ fun AlertScreen(
 @Composable
 fun AlertCard(
     alert: ExchangeRateAlert,
+    currencyUnit: String,
     onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -270,7 +282,7 @@ fun AlertCard(
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = alert.currencyCode,
+                        text = currencyUnit,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -302,8 +314,8 @@ fun AlertCard(
                 }
                 
                 val alertText = when (alert.alertType) {
-                    AlertType.ABOVE -> "₩ ${alert.targetRate.format(2)} 이상일 때"
-                    AlertType.BELOW -> "₩ ${alert.targetRate.format(2)} 이하일 때"
+                    AlertType.ABOVE -> "$currencyUnit 기준 ₩ ${alert.targetRate.format(2)} 이상일 때"
+                    AlertType.BELOW -> "$currencyUnit 기준 ₩ ${alert.targetRate.format(2)} 이하일 때"
                 }
                 
                 Text(
@@ -349,6 +361,9 @@ fun AddAlertDialog(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val currencies = uiState.selectedCurrencies
+    val currencyUnitsByCode = uiState.exchangeRates.associate { rate ->
+        rate.currencyCode to rate.currencyUnit
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -363,7 +378,8 @@ fun AddAlertDialog(
                     onExpandedChange = { expandedCurrency = !expandedCurrency }
                 ) {
                     OutlinedTextField(
-                        value = selectedCurrency,
+                        value = currencyUnitsByCode[selectedCurrency]
+                            ?: CurrencyUtils.getOfficialCurrencyUnit(selectedCurrency),
                         onValueChange = { },
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expandedCurrency) },
@@ -381,7 +397,12 @@ fun AddAlertDialog(
                     ) {
                         currencies.forEach { currency ->
                             DropdownMenuItem(
-                                text = { Text(currency) },
+                                text = {
+                                    Text(
+                                        currencyUnitsByCode[currency]
+                                            ?: CurrencyUtils.getOfficialCurrencyUnit(currency)
+                                    )
+                                },
                                 onClick = {
                                     selectedCurrency = currency
                                     expandedCurrency = false

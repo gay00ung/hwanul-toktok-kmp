@@ -53,7 +53,7 @@ fun SimpleExchangeRateCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = exchangeRate.currencyCode,
+                    text = exchangeRate.currencyUnit,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -80,7 +80,7 @@ fun SimpleExchangeRateCard(
             
             // 세 번째 줄: 기준 환율
             Text(
-                text = "₩ ${exchangeRate.baseRate.format(2)}",
+                text = "${exchangeRate.currencyUnit} = ₩ ${exchangeRate.baseRate.format(2)}",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -89,7 +89,7 @@ fun SimpleExchangeRateCard(
             // 간격
             Spacer(modifier = Modifier.height(12.dp))
             
-            // 네 번째 줄: 매수, 매도, 송금 정보
+            // 네 번째 줄: 송금 받을 때, 송금 보낼 때, 장부가격 정보
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -99,7 +99,7 @@ fun SimpleExchangeRateCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "매수",
+                        text = "송금 받을 때",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -116,7 +116,7 @@ fun SimpleExchangeRateCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "매도",
+                        text = "송금 보낼 때",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -133,7 +133,7 @@ fun SimpleExchangeRateCard(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "송금",
+                        text = "장부가격",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

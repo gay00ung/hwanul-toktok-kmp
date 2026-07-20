@@ -10,9 +10,6 @@ import net.ifmain.hwanultoktok.kmp.domain.model.AlertType
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRateAlert
 import net.ifmain.hwanultoktok.kmp.domain.repository.AlertRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 class AlertRepositoryImpl(
     private val database: HwanulDatabase
@@ -30,7 +27,8 @@ class AlertRepositoryImpl(
                         alertType = AlertType.valueOf(alert.alertType),
                         targetRate = alert.targetRate,
                         isEnabled = alert.isEnabled == 1L,
-                        createdAt = LocalDateTime.parse(alert.createdAt)
+                        createdAt = LocalDateTime.parse(alert.createdAt),
+                        isArmed = alert.isArmed == 1L,
                     )
                 }
             }
@@ -42,7 +40,8 @@ class AlertRepositoryImpl(
             alertType = alert.alertType.name,
             targetRate = alert.targetRate,
             isEnabled = if (alert.isEnabled) 1 else 0,
-            createdAt = alert.createdAt.toString()
+            createdAt = alert.createdAt.toString(),
+            isArmed = if (alert.isArmed) 1 else 0,
         )
     }
 
@@ -57,16 +56,15 @@ class AlertRepositoryImpl(
             targetRate = alert.targetRate,
             isEnabled = if (alert.isEnabled) 1 else 0,
             createdAt = alert.createdAt.toString(),
+            isArmed = if (alert.isArmed) 1 else 0,
             id = alert.id
         )
     }
 
-    override suspend fun getLastTriggeredTime(alertId: Long): Long? {
-        // 매일 한 번만 체크하므로 항상 null 반환 (항상 알림 가능)
-        return null
-    }
-
-    override suspend fun updateLastTriggeredTime(alertId: Long, timestamp: Long) {
-        // 매일 한 번만 체크하므로 저장할 필요 없음
+    override suspend fun setArmed(alertId: Long, isArmed: Boolean) {
+        database.exchangeRateAlertQueries.setAlertArmed(
+            isArmed = if (isArmed) 1 else 0,
+            id = alertId,
+        )
     }
 }

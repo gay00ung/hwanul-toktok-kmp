@@ -7,6 +7,14 @@ package net.ifmain.hwanultoktok.kmp.util
  * @since 2025. 8. 14.
  */
 object CurrencyUtils {
+
+    fun getOfficialCurrencyUnit(currencyCode: String): String {
+        return when (val normalizedCode = currencyCode.uppercase()) {
+            "JPY", "JPY(100)" -> "JPY(100)"
+            "IDR", "IDR(100)" -> "IDR(100)"
+            else -> normalizedCode
+        }
+    }
     
     /**
      * 통화별 이모지 반환

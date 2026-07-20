@@ -3,9 +3,8 @@ package net.ifmain.hwanultoktok.kmp.widget
 import android.content.Context
 import androidx.core.content.edit
 import androidx.glance.appwidget.updateAll
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.number
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRate
 import net.ifmain.hwanultoktok.kmp.util.getCurrentDateTime
@@ -25,7 +24,7 @@ object WidgetUpdateHelper {
      * 환율 데이터를 SharedPreferences에 저장하고 위젯을 업데이트합니다.
      * ViewModel에서 환율 데이터를 받아올 때 호출합니다.
      */
-    fun saveExchangeRatesAndUpdateWidget(
+    suspend fun saveExchangeRatesAndUpdateWidget(
         context: Context,
         rates: List<ExchangeRate>,
         dataDate: LocalDate? = null
@@ -41,18 +40,21 @@ object WidgetUpdateHelper {
 
         prefs.edit {
             rates.forEach { rate ->
-                val key = "KRW_${rate.currencyCode}"
+                val snapshot = rate.toStoredWidgetRate()
+                val key = "KRW_${snapshot.currencyCode}"
                 val previousRate = prefs.getFloat(key, 0f)
                 val storedBaseline = prefs.getFloat("${key}_prev", 0f)
+                val storedCurrencyUnit = prefs.getString("${key}_unit", null)
+                val shouldResetBaseline = snapshot.requiresBaselineReset(storedCurrencyUnit)
 
-                val currentRate = when (rate.currencyCode) {
-                    "JPY(100)", "JPY" -> (rate.baseRate / 100.0).toFloat()
-                    else -> rate.baseRate.toFloat()
-                }
+                val currentRate = snapshot.rate
 
                 putFloat(key, currentRate)
+                putString("${key}_unit", snapshot.currencyUnit)
 
-                if (isNewOfficialDate) {
+                if (shouldResetBaseline) {
+                    putFloat("${key}_prev", currentRate)
+                } else if (isNewOfficialDate) {
                     val baseline = if (previousRate > 0f) previousRate else currentRate
                     putFloat("${key}_prev", baseline)
                 } else if (storedBaseline == 0f && currentRate > 0f) {
@@ -66,7 +68,7 @@ object WidgetUpdateHelper {
             putString("actual_data_date", newDataDateString)
         }
 
-        CoroutineScope(Dispatchers.IO).launch {
+        withContext(Dispatchers.IO) {
             FavoriteExchangeRateWidget().updateAll(context)
         }
     }
@@ -74,9 +76,30 @@ object WidgetUpdateHelper {
     /**
      * 즐겨찾기가 변경되었을 때 위젯을 업데이트합니다.
      */
-    fun updateWidgetOnFavoriteChange(context: Context) {
-        CoroutineScope(Dispatchers.IO).launch {
+    suspend fun updateWidgetOnFavoriteChange(context: Context) {
+        withContext(Dispatchers.IO) {
             FavoriteExchangeRateWidget().updateAll(context)
         }
+    }
+}
+
+internal data class StoredWidgetRate(
+    val currencyCode: String,
+    val currencyUnit: String,
+    val rate: Float,
+)
+
+internal fun ExchangeRate.toStoredWidgetRate(): StoredWidgetRate {
+    return StoredWidgetRate(
+        currencyCode = currencyCode,
+        currencyUnit = currencyUnit,
+        rate = baseRate.toFloat(),
+    )
+}
+
+internal fun StoredWidgetRate.requiresBaselineReset(storedCurrencyUnit: String?): Boolean {
+    return when {
+        storedCurrencyUnit != null -> storedCurrencyUnit != currencyUnit
+        else -> currencyUnit != currencyCode
     }
 }

@@ -30,7 +30,9 @@ import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import net.ifmain.hwanultoktok.kmp.MainActivity
 import net.ifmain.hwanultoktok.kmp.database.HwanulDatabase
 import net.ifmain.hwanultoktok.kmp.di.DatabaseDriverFactory
@@ -43,9 +45,14 @@ import net.ifmain.hwanultoktok.kmp.util.CurrencyUtils
  */
 class FavoriteExchangeRateWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val contentState = loadFavoriteExchangeRates(context)
+
         provideContent {
             GlanceTheme {
-                FavoriteExchangeRateContent(context)
+                FavoriteExchangeRateContent(
+                    context = context,
+                    contentState = contentState,
+                )
             }
         }
     }
@@ -55,8 +62,10 @@ class FavoriteExchangeRateWidget : GlanceAppWidget() {
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun FavoriteExchangeRateContent(context: Context) {
-    val database = HwanulDatabase(DatabaseDriverFactory(context).createDriver())
+fun FavoriteExchangeRateContent(
+    context: Context,
+    contentState: WidgetContentState,
+) {
     val prefs = context.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
 
     // 실제 데이터 날짜 사용 (앱과 동기화)
@@ -75,35 +84,7 @@ fun FavoriteExchangeRateContent(context: Context) {
         "-- 고시환율"
     }
 
-    val favoriteRates = runBlocking {
-        try {
-            val favorites = database.exchangeRateAlertQueries.getAllFavorites().executeAsList()
-
-            favorites.take(3).map { favorite ->
-                val key = "${favorite.fromCurrencyCode}_${favorite.toCurrencyCode}"
-                val rate = prefs.getFloat(key, 0f)
-                val previousRate = prefs.getFloat("${key}_prev", 0f)
-
-                val change = when {
-                    previousRate == 0f -> ""
-                    rate > previousRate -> "▲ ${String.format("%.2f", rate - previousRate)}"
-                    rate < previousRate -> "▼ ${String.format("%.2f", previousRate - rate)}"
-                    else -> "- 0.00"
-                }
-
-                ExchangeRateData(
-                    currencyCode = favorite.toCurrencyCode,
-                    rate = if (rate > 0) String.format("%.2f", rate) else "---",
-                    change = change
-                )
-            }
-        } catch (e: Exception) {
-            // 에러 발생시 기본값 사용
-            listOf(
-                ExchangeRateData("USD", "1,350.00", ""),
-            )
-        }
-    }
+    val favoriteRates = contentState.rates
 
     Column(
         modifier = GlanceModifier
@@ -171,7 +152,25 @@ fun FavoriteExchangeRateContent(context: Context) {
                 }
             }
 
-            if (favoriteRates.isEmpty()) {
+            if (contentState.loadFailed) {
+                Column(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "환율 정보를 불러올 수 없습니다",
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onSurfaceVariant
+                        )
+                    )
+                    Text(
+                        text = "잠시 후 새로고침해 주세요",
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onSurfaceVariant
+                        )
+                    )
+                }
+            } else if (favoriteRates.isEmpty()) {
                 Column(
                     modifier = GlanceModifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -214,7 +213,7 @@ fun ExchangeRateCard(data: ExchangeRateData) {
         ) {
             Column {
                 Text(
-                    text = CurrencyUtils.getCurrencyEmoji(data.currencyCode) + " " + data.currencyCode,
+                    text = CurrencyUtils.getCurrencyEmoji(data.currencyCode) + " " + data.currencyUnit,
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         color = GlanceTheme.colors.onSurface
@@ -258,9 +257,59 @@ fun ExchangeRateCard(data: ExchangeRateData) {
 
 data class ExchangeRateData(
     val currencyCode: String,
+    val currencyUnit: String,
     val rate: String,
     val change: String
 )
+
+data class WidgetContentState(
+    val rates: List<ExchangeRateData>,
+    val loadFailed: Boolean = false,
+)
+
+@SuppressLint("DefaultLocale")
+private suspend fun loadFavoriteExchangeRates(context: Context): WidgetContentState =
+    withContext(Dispatchers.IO) {
+        val driver = DatabaseDriverFactory(context).createDriver()
+        val database = HwanulDatabase(driver)
+        val prefs = context.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
+
+        try {
+            val favorites = database.exchangeRateAlertQueries.getAllFavorites().executeAsList()
+            val rates = favorites.take(3).map { favorite ->
+                val key = "${favorite.fromCurrencyCode}_${favorite.toCurrencyCode}"
+                val rate = prefs.getFloat(key, 0f)
+                val previousRate = prefs.getFloat("${key}_prev", 0f)
+                val currencyUnit = prefs.getString("${key}_unit", null)
+                    ?: CurrencyUtils.getOfficialCurrencyUnit(favorite.toCurrencyCode)
+
+                val change = when {
+                    previousRate == 0f -> ""
+                    rate > previousRate -> "▲ ${String.format("%.2f", rate - previousRate)}"
+                    rate < previousRate -> "▼ ${String.format("%.2f", previousRate - rate)}"
+                    else -> "- 0.00"
+                }
+
+                ExchangeRateData(
+                    currencyCode = favorite.toCurrencyCode,
+                    currencyUnit = currencyUnit,
+                    rate = if (rate > 0) String.format("%.2f", rate) else "---",
+                    change = change,
+                )
+            }
+
+            WidgetContentState(rates = rates)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            WidgetContentState(
+                rates = emptyList(),
+                loadFailed = true,
+            )
+        } finally {
+            driver.close()
+        }
+    }
 
 /**
  * 앱을 안전하게 시작하기 위한 Intent 생성

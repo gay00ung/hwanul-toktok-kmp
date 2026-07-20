@@ -51,8 +51,21 @@ class AndroidNotificationService(
     ) {
         println("AndroidNotificationService: showNotification 호출 - title: $title, message: $message")
         if (!isNotificationPermissionGranted()) {
-            println("AndroidNotificationService: 알림 권한이 없습니다.")
-            return
+            throw SecurityException("알림 권한이 없습니다.")
+        }
+
+        val notificationManager = context.getSystemService(NotificationManager::class.java)
+        val notificationManagerCompat = NotificationManagerCompat.from(context)
+        check(notificationManagerCompat.areNotificationsEnabled()) {
+            "앱 알림이 비활성화되어 있습니다."
+        }
+        val notificationChannel = checkNotNull(
+            notificationManager.getNotificationChannel(CHANNEL_ID),
+        ) {
+            "환율 알림 채널이 생성되지 않았습니다."
+        }
+        check(notificationChannel.importance != NotificationManager.IMPORTANCE_NONE) {
+            "환율 알림 채널이 비활성화되어 있습니다."
         }
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -63,13 +76,8 @@ class AndroidNotificationService(
             .setAutoCancel(true)
             .build()
 
-        try {
-            NotificationManagerCompat.from(context).notify(notificationId, notification)
-            println("AndroidNotificationService: 알림 발송 성공")
-        } catch (e: Exception) {
-            println("AndroidNotificationService: 알림 발송 실패 - ${e.message}")
-            e.printStackTrace()
-        }
+        notificationManagerCompat.notify(notificationId, notification)
+        println("AndroidNotificationService: 알림 발송 성공")
     }
 
     override suspend fun requestNotificationPermission(): Boolean {
