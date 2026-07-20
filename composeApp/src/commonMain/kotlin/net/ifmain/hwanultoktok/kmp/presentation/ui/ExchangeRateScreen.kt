@@ -47,8 +47,8 @@ fun ExchangeRateScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        viewModel.loadExchangeRates()
+    LaunchedEffect(viewModel) {
+        viewModel.initialize()
     }
 
     Column(
@@ -190,4 +190,3 @@ fun ExchangeRateScreen(
         }
     }
 }
-

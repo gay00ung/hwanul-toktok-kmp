@@ -24,7 +24,7 @@ import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithoutHoliday
 class ExchangeRateViewModel(
     private val getExchangeRatesUseCase: GetExchangeRatesUseCase,
     private val refreshExchangeRatesUseCase: RefreshExchangeRatesUseCase,
-    getFavoriteUseCase: GetFavoritesUseCase,
+    private val getFavoriteUseCase: GetFavoritesUseCase,
     private val toggleFavoriteUseCase: ToggleFavoriteUseCase,
     private val getHolidaysUseCase: GetHolidaysUseCase,
 ) : ViewModel() {
@@ -32,8 +32,12 @@ class ExchangeRateViewModel(
     private val _uiState = MutableStateFlow(ExchangeRateUiState())
     val uiState: StateFlow<ExchangeRateUiState> = _uiState.asStateFlow()
 
-    init {
-        println("ExchangeRateViewModel: 초기화 시작")
+    private var isInitialized = false
+
+    fun initialize() {
+        if (isInitialized) return
+
+        isInitialized = true
         loadExchangeRates()
         getFavoriteUseCase()
             .onEach { favorites ->
@@ -42,7 +46,8 @@ class ExchangeRateViewModel(
                         favoriteIds = favorites.map { it.toCurrencyCode }.toSet()
                     )
                 }
-            }.launchIn(viewModelScope)
+            }
+            .launchIn(viewModelScope)
     }
 
     fun loadExchangeRates() {

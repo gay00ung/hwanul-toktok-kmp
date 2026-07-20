@@ -2,10 +2,10 @@ package net.ifmain.hwanultoktok.kmp.presentation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.ifmain.hwanultoktok.kmp.presentation.ui.ExchangeRateScreen
 import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.ExchangeRateViewModel
 import net.ifmain.hwanultoktok.kmp.widget.WidgetUpdateHelper
@@ -25,7 +25,7 @@ import org.koin.androidx.compose.koinViewModel
 fun ExchangeRateScreenWithWidget(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val viewModel: ExchangeRateViewModel = koinViewModel()
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(uiState.exchangeRates) {
         if (uiState.exchangeRates.isNotEmpty()) {
@@ -43,5 +43,8 @@ fun ExchangeRateScreenWithWidget(modifier: Modifier = Modifier) {
         WidgetUpdateHelper.updateWidgetOnFavoriteChange(context)
     }
 
-    ExchangeRateScreen(modifier = modifier)
+    ExchangeRateScreen(
+        modifier = modifier,
+        viewModel = viewModel,
+    )
 }
