@@ -39,6 +39,14 @@ kotlin {
     sourceSets {
         val commonMain by getting
         val androidMain by getting
+        val androidInstrumentedTest by getting {
+            dependencies {
+                implementation(libs.kotlin.test)
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.androidx.testExt.junit)
+                implementation(libs.androidx.test.runner)
+            }
+        }
         val iosX64Main by getting
         val iosArm64Main by getting
         val iosSimulatorArm64Main by getting
@@ -110,6 +118,8 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
+            implementation(libs.ktor.client.mock)
         }
     }
 }
@@ -129,10 +139,10 @@ android {
     defaultConfig {
         applicationId = "net.ifmain.hwanultoktok.kmp"
         minSdk = libs.versions.android.minSdk.get().toInt()
-        //noinspection OldTargetApi
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 7
-        versionName = "1.0.6"
+        versionCode = 8
+        versionName = "1.0.7"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
         // Load API key from local.properties
         val localProperties = Properties()

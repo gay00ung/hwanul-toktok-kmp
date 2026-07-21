@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -30,11 +32,14 @@ import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import net.ifmain.hwanultoktok.kmp.MainActivity
-import net.ifmain.hwanultoktok.kmp.database.HwanulDatabase
-import net.ifmain.hwanultoktok.kmp.di.DatabaseDriverFactory
+import net.ifmain.hwanultoktok.kmp.domain.model.FavoriteCurrencyPair
+import net.ifmain.hwanultoktok.kmp.domain.repository.FavoriteRepository
 import net.ifmain.hwanultoktok.kmp.util.CurrencyUtils
+import org.koin.core.context.GlobalContext
 
 /**
  *
@@ -43,9 +48,27 @@ import net.ifmain.hwanultoktok.kmp.util.CurrencyUtils
  */
 class FavoriteExchangeRateWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        val favoriteRepository = GlobalContext.get().get<FavoriteRepository>()
+        val favoritesState = favoriteRepository.getAllFavorites()
+            .map { favorites -> WidgetFavoritesState(favorites) }
+            .catch {
+                emit(
+                    WidgetFavoritesState(
+                        favorites = emptyList(),
+                        loadFailed = true,
+                    )
+                )
+            }
+        val initialFavoritesState = favoritesState.first()
+
         provideContent {
+            val currentFavoritesState by favoritesState.collectAsState(initialFavoritesState)
+
             GlanceTheme {
-                FavoriteExchangeRateContent(context)
+                FavoriteExchangeRateContent(
+                    context = context,
+                    contentState = currentFavoritesState.toWidgetContentState(context),
+                )
             }
         }
     }
@@ -55,8 +78,10 @@ class FavoriteExchangeRateWidget : GlanceAppWidget() {
 
 @SuppressLint("DefaultLocale")
 @Composable
-fun FavoriteExchangeRateContent(context: Context) {
-    val database = HwanulDatabase(DatabaseDriverFactory(context).createDriver())
+fun FavoriteExchangeRateContent(
+    context: Context,
+    contentState: WidgetContentState,
+) {
     val prefs = context.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
 
     // 실제 데이터 날짜 사용 (앱과 동기화)
@@ -75,35 +100,7 @@ fun FavoriteExchangeRateContent(context: Context) {
         "-- 고시환율"
     }
 
-    val favoriteRates = runBlocking {
-        try {
-            val favorites = database.exchangeRateAlertQueries.getAllFavorites().executeAsList()
-
-            favorites.take(3).map { favorite ->
-                val key = "${favorite.fromCurrencyCode}_${favorite.toCurrencyCode}"
-                val rate = prefs.getFloat(key, 0f)
-                val previousRate = prefs.getFloat("${key}_prev", 0f)
-
-                val change = when {
-                    previousRate == 0f -> ""
-                    rate > previousRate -> "▲ ${String.format("%.2f", rate - previousRate)}"
-                    rate < previousRate -> "▼ ${String.format("%.2f", previousRate - rate)}"
-                    else -> "- 0.00"
-                }
-
-                ExchangeRateData(
-                    currencyCode = favorite.toCurrencyCode,
-                    rate = if (rate > 0) String.format("%.2f", rate) else "---",
-                    change = change
-                )
-            }
-        } catch (e: Exception) {
-            // 에러 발생시 기본값 사용
-            listOf(
-                ExchangeRateData("USD", "1,350.00", ""),
-            )
-        }
-    }
+    val favoriteRates = contentState.rates
 
     Column(
         modifier = GlanceModifier
@@ -171,7 +168,25 @@ fun FavoriteExchangeRateContent(context: Context) {
                 }
             }
 
-            if (favoriteRates.isEmpty()) {
+            if (contentState.loadFailed) {
+                Column(
+                    modifier = GlanceModifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "환율 정보를 불러올 수 없습니다",
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onSurfaceVariant
+                        )
+                    )
+                    Text(
+                        text = "잠시 후 새로고침해 주세요",
+                        style = TextStyle(
+                            color = GlanceTheme.colors.onSurfaceVariant
+                        )
+                    )
+                }
+            } else if (favoriteRates.isEmpty()) {
                 Column(
                     modifier = GlanceModifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -214,7 +229,7 @@ fun ExchangeRateCard(data: ExchangeRateData) {
         ) {
             Column {
                 Text(
-                    text = CurrencyUtils.getCurrencyEmoji(data.currencyCode) + " " + data.currencyCode,
+                    text = CurrencyUtils.getCurrencyEmoji(data.currencyCode) + " " + data.currencyUnit,
                     style = TextStyle(
                         fontWeight = FontWeight.Bold,
                         color = GlanceTheme.colors.onSurface
@@ -258,9 +273,55 @@ fun ExchangeRateCard(data: ExchangeRateData) {
 
 data class ExchangeRateData(
     val currencyCode: String,
+    val currencyUnit: String,
     val rate: String,
     val change: String
 )
+
+data class WidgetContentState(
+    val rates: List<ExchangeRateData>,
+    val loadFailed: Boolean = false,
+)
+
+private data class WidgetFavoritesState(
+    val favorites: List<FavoriteCurrencyPair>,
+    val loadFailed: Boolean = false,
+)
+
+@SuppressLint("DefaultLocale")
+private fun WidgetFavoritesState.toWidgetContentState(context: Context): WidgetContentState {
+    if (loadFailed) {
+        return WidgetContentState(
+            rates = emptyList(),
+            loadFailed = true,
+        )
+    }
+
+    val prefs = context.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
+    val rates = favorites.take(3).map { favorite ->
+        val key = "${favorite.fromCurrencyCode}_${favorite.toCurrencyCode}"
+        val rate = prefs.getFloat(key, 0f)
+        val previousRate = prefs.getFloat("${key}_prev", 0f)
+        val currencyUnit = prefs.getString("${key}_unit", null)
+            ?: CurrencyUtils.getOfficialCurrencyUnit(favorite.toCurrencyCode)
+
+        val change = when {
+            previousRate == 0f -> ""
+            rate > previousRate -> "▲ ${String.format("%.2f", rate - previousRate)}"
+            rate < previousRate -> "▼ ${String.format("%.2f", previousRate - rate)}"
+            else -> "- 0.00"
+        }
+
+        ExchangeRateData(
+            currencyCode = favorite.toCurrencyCode,
+            currencyUnit = currencyUnit,
+            rate = if (rate > 0) String.format("%.2f", rate) else "---",
+            change = change,
+        )
+    }
+
+    return WidgetContentState(rates = rates)
+}
 
 /**
  * 앱을 안전하게 시작하기 위한 Intent 생성

@@ -15,7 +15,7 @@ import net.ifmain.hwanultoktok.kmp.util.getCurrentDateTime
  * MainActivity나 Application 클래스에서 ViewModel을 초기화할 때
  * 이 함수를 사용하여 위젯 업데이트를 연동합니다.
  */
-fun ExchangeRateViewModel.setupWidgetUpdate(context: Context) {
+suspend fun ExchangeRateViewModel.setupWidgetUpdate(context: Context) {
     uiState.value.exchangeRates.let { rates ->
         if (rates.isNotEmpty()) {
             val updateTime = rates.firstOrNull()?.timestamp ?: getCurrentDateTime()
@@ -28,7 +28,7 @@ fun ExchangeRateViewModel.setupWidgetUpdate(context: Context) {
 /**
  * 환율 데이터를 새로고침하고 위젯도 함께 업데이트합니다.
  */
-fun ExchangeRateViewModel.refreshWithWidget(context: Context) {
+suspend fun ExchangeRateViewModel.refreshWithWidget(context: Context) {
     refreshExchangeRates()
 
     uiState.value.exchangeRates.let { rates ->
@@ -47,7 +47,9 @@ fun ExchangeRateViewModel.toggleFavoriteWithWidget(
     context: Context,
     currencyCode: String
 ) {
-    toggleFavorite(currencyCode)
+    val applicationContext = context.applicationContext
 
-    WidgetUpdateHelper.updateWidgetOnFavoriteChange(context)
+    toggleFavorite(currencyCode) {
+        WidgetUpdateHelper.updateWidgetOnFavoriteChange(applicationContext)
+    }
 }

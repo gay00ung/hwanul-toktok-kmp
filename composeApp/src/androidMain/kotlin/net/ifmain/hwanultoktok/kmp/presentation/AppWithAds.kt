@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import net.ifmain.hwanultoktok.kmp.domain.service.NotificationService
 import net.ifmain.hwanultoktok.kmp.presentation.components.AdBanner
 import net.ifmain.hwanultoktok.kmp.presentation.theme.HwanulTheme
-import net.ifmain.hwanultoktok.kmp.presentation.ui.AlertScreen
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -126,7 +125,7 @@ fun AppWithBottomAd() {
                     modifier = Modifier.padding(paddingValues)
                 )
 
-                1 -> AlertScreen(
+                1 -> AlertScreenWithViewModels(
                     modifier = Modifier.padding(paddingValues)
                 )
             }
