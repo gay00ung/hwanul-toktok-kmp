@@ -127,12 +127,19 @@ class ExchangeRateViewModel(
         _uiState.value = _uiState.value.copy(selectedCurrencies = currentSelected)
     }
 
-    fun toggleFavorite(currencyCode: String) {
+    fun toggleFavorite(
+        currencyCode: String,
+        onSuccess: suspend () -> Unit = {},
+    ) {
         viewModelScope.launch {
-            toggleFavoriteUseCase(
+            val result = toggleFavoriteUseCase(
                 fromCurrencyCode = "KRW",
                 toCurrencyCode = currencyCode
             )
+
+            if (result.isSuccess) {
+                onSuccess()
+            }
         }
     }
 

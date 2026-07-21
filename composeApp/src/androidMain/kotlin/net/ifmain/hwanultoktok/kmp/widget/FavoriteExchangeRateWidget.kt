@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.dp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
@@ -30,13 +32,14 @@ import androidx.glance.layout.size
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import net.ifmain.hwanultoktok.kmp.MainActivity
-import net.ifmain.hwanultoktok.kmp.database.HwanulDatabase
-import net.ifmain.hwanultoktok.kmp.di.DatabaseDriverFactory
+import net.ifmain.hwanultoktok.kmp.domain.model.FavoriteCurrencyPair
+import net.ifmain.hwanultoktok.kmp.domain.repository.FavoriteRepository
 import net.ifmain.hwanultoktok.kmp.util.CurrencyUtils
+import org.koin.core.context.GlobalContext
 
 /**
  *
@@ -45,13 +48,26 @@ import net.ifmain.hwanultoktok.kmp.util.CurrencyUtils
  */
 class FavoriteExchangeRateWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val contentState = loadFavoriteExchangeRates(context)
+        val favoriteRepository = GlobalContext.get().get<FavoriteRepository>()
+        val favoritesState = favoriteRepository.getAllFavorites()
+            .map { favorites -> WidgetFavoritesState(favorites) }
+            .catch {
+                emit(
+                    WidgetFavoritesState(
+                        favorites = emptyList(),
+                        loadFailed = true,
+                    )
+                )
+            }
+        val initialFavoritesState = favoritesState.first()
 
         provideContent {
+            val currentFavoritesState by favoritesState.collectAsState(initialFavoritesState)
+
             GlanceTheme {
                 FavoriteExchangeRateContent(
                     context = context,
-                    contentState = contentState,
+                    contentState = currentFavoritesState.toWidgetContentState(context),
                 )
             }
         }
@@ -267,49 +283,45 @@ data class WidgetContentState(
     val loadFailed: Boolean = false,
 )
 
+private data class WidgetFavoritesState(
+    val favorites: List<FavoriteCurrencyPair>,
+    val loadFailed: Boolean = false,
+)
+
 @SuppressLint("DefaultLocale")
-private suspend fun loadFavoriteExchangeRates(context: Context): WidgetContentState =
-    withContext(Dispatchers.IO) {
-        val driver = DatabaseDriverFactory(context).createDriver()
-        val database = HwanulDatabase(driver)
-        val prefs = context.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
-
-        try {
-            val favorites = database.exchangeRateAlertQueries.getAllFavorites().executeAsList()
-            val rates = favorites.take(3).map { favorite ->
-                val key = "${favorite.fromCurrencyCode}_${favorite.toCurrencyCode}"
-                val rate = prefs.getFloat(key, 0f)
-                val previousRate = prefs.getFloat("${key}_prev", 0f)
-                val currencyUnit = prefs.getString("${key}_unit", null)
-                    ?: CurrencyUtils.getOfficialCurrencyUnit(favorite.toCurrencyCode)
-
-                val change = when {
-                    previousRate == 0f -> ""
-                    rate > previousRate -> "▲ ${String.format("%.2f", rate - previousRate)}"
-                    rate < previousRate -> "▼ ${String.format("%.2f", previousRate - rate)}"
-                    else -> "- 0.00"
-                }
-
-                ExchangeRateData(
-                    currencyCode = favorite.toCurrencyCode,
-                    currencyUnit = currencyUnit,
-                    rate = if (rate > 0) String.format("%.2f", rate) else "---",
-                    change = change,
-                )
-            }
-
-            WidgetContentState(rates = rates)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            WidgetContentState(
-                rates = emptyList(),
-                loadFailed = true,
-            )
-        } finally {
-            driver.close()
-        }
+private fun WidgetFavoritesState.toWidgetContentState(context: Context): WidgetContentState {
+    if (loadFailed) {
+        return WidgetContentState(
+            rates = emptyList(),
+            loadFailed = true,
+        )
     }
+
+    val prefs = context.getSharedPreferences("exchange_rates", Context.MODE_PRIVATE)
+    val rates = favorites.take(3).map { favorite ->
+        val key = "${favorite.fromCurrencyCode}_${favorite.toCurrencyCode}"
+        val rate = prefs.getFloat(key, 0f)
+        val previousRate = prefs.getFloat("${key}_prev", 0f)
+        val currencyUnit = prefs.getString("${key}_unit", null)
+            ?: CurrencyUtils.getOfficialCurrencyUnit(favorite.toCurrencyCode)
+
+        val change = when {
+            previousRate == 0f -> ""
+            rate > previousRate -> "▲ ${String.format("%.2f", rate - previousRate)}"
+            rate < previousRate -> "▼ ${String.format("%.2f", previousRate - rate)}"
+            else -> "- 0.00"
+        }
+
+        ExchangeRateData(
+            currencyCode = favorite.toCurrencyCode,
+            currencyUnit = currencyUnit,
+            rate = if (rate > 0) String.format("%.2f", rate) else "---",
+            change = change,
+        )
+    }
+
+    return WidgetContentState(rates = rates)
+}
 
 /**
  * 앱을 안전하게 시작하기 위한 Intent 생성

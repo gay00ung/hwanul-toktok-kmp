@@ -25,6 +25,7 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExchangeRateViewModelTest {
@@ -60,6 +61,51 @@ class ExchangeRateViewModelTest {
         assertEquals(1, exchangeRateRepository.getExchangeRatesCallCount)
         assertEquals(1, favoriteRepository.getAllFavoritesCallCount)
     }
+
+    @Test
+    fun toggle_favorite_invokes_success_callback_after_repository_update() = runTest(mainDispatcher) {
+        val callOrder = mutableListOf<String>()
+        val favoriteRepository = FakeFavoriteRepository(
+            onAddFavorite = { callOrder += "stored" },
+        )
+        val viewModel = ExchangeRateViewModel(
+            getExchangeRatesUseCase = GetExchangeRatesUseCase(FakeExchangeRateRepository()),
+            refreshExchangeRatesUseCase = RefreshExchangeRatesUseCase(FakeExchangeRateRepository()),
+            getFavoriteUseCase = GetFavoritesUseCase(favoriteRepository),
+            toggleFavoriteUseCase = ToggleFavoriteUseCase(favoriteRepository),
+            getHolidaysUseCase = GetHolidaysUseCase(FakeHolidayRepository()),
+        )
+
+        viewModel.toggleFavorite("USD") {
+            callOrder += "widget"
+        }
+        advanceUntilIdle()
+
+        assertEquals(listOf("stored", "widget"), callOrder)
+    }
+
+    @Test
+    fun toggle_favorite_does_not_invoke_success_callback_when_repository_update_fails() =
+        runTest(mainDispatcher) {
+            var callbackCalled = false
+            val favoriteRepository = FakeFavoriteRepository(
+                addFavoriteResult = Result.failure(IllegalStateException("write failed")),
+            )
+            val viewModel = ExchangeRateViewModel(
+                getExchangeRatesUseCase = GetExchangeRatesUseCase(FakeExchangeRateRepository()),
+                refreshExchangeRatesUseCase = RefreshExchangeRatesUseCase(FakeExchangeRateRepository()),
+                getFavoriteUseCase = GetFavoritesUseCase(favoriteRepository),
+                toggleFavoriteUseCase = ToggleFavoriteUseCase(favoriteRepository),
+                getHolidaysUseCase = GetHolidaysUseCase(FakeHolidayRepository()),
+            )
+
+            viewModel.toggleFavorite("USD") {
+                callbackCalled = true
+            }
+            advanceUntilIdle()
+
+            assertFalse(callbackCalled)
+        }
 }
 
 private class FakeExchangeRateRepository : ExchangeRateRepository {
@@ -91,7 +137,10 @@ private class FakeExchangeRateRepository : ExchangeRateRepository {
     override suspend fun savePreviousExchangeRates(rates: List<ExchangeRate>) = Unit
 }
 
-private class FakeFavoriteRepository : FavoriteRepository {
+private class FakeFavoriteRepository(
+    private val addFavoriteResult: Result<Unit> = Result.success(Unit),
+    private val onAddFavorite: () -> Unit = {},
+) : FavoriteRepository {
     var getAllFavoritesCallCount = 0
         private set
 
@@ -103,7 +152,10 @@ private class FakeFavoriteRepository : FavoriteRepository {
     override suspend fun addFavorite(
         fromCurrencyCode: String,
         toCurrencyCode: String,
-    ): Result<Unit> = Result.success(Unit)
+    ): Result<Unit> {
+        onAddFavorite()
+        return addFavoriteResult
+    }
 
     override suspend fun removeFavorite(
         fromCurrencyCode: String,

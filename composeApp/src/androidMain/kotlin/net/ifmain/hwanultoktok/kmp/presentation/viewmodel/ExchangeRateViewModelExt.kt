@@ -43,11 +43,13 @@ suspend fun ExchangeRateViewModel.refreshWithWidget(context: Context) {
 /**
  * 즐겨찾기를 토글하고 위젯도 함께 업데이트합니다.
  */
-suspend fun ExchangeRateViewModel.toggleFavoriteWithWidget(
+fun ExchangeRateViewModel.toggleFavoriteWithWidget(
     context: Context,
     currencyCode: String
 ) {
-    toggleFavorite(currencyCode)
+    val applicationContext = context.applicationContext
 
-    WidgetUpdateHelper.updateWidgetOnFavoriteChange(context)
+    toggleFavorite(currencyCode) {
+        WidgetUpdateHelper.updateWidgetOnFavoriteChange(applicationContext)
+    }
 }

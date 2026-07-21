@@ -8,6 +8,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.ifmain.hwanultoktok.kmp.presentation.ui.ExchangeRateScreen
 import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.ExchangeRateViewModel
+import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.toggleFavoriteWithWidget
 import net.ifmain.hwanultoktok.kmp.widget.WidgetUpdateHelper
 import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithoutHoliday
 import net.ifmain.hwanultoktok.kmp.util.getCurrentDateTime
@@ -39,12 +40,11 @@ fun ExchangeRateScreenWithWidget(modifier: Modifier = Modifier) {
         }
     }
 
-    LaunchedEffect(uiState.favoriteIds) {
-        WidgetUpdateHelper.updateWidgetOnFavoriteChange(context)
-    }
-
     ExchangeRateScreen(
         modifier = modifier,
         viewModel = viewModel,
+        onFavoriteClick = { currencyCode ->
+            viewModel.toggleFavoriteWithWidget(context, currencyCode)
+        },
     )
 }

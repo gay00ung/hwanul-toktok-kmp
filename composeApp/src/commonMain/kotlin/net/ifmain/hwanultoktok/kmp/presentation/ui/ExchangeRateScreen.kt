@@ -43,7 +43,10 @@ import org.koin.compose.koinInject
 @Composable
 fun ExchangeRateScreen(
     modifier: Modifier = Modifier,
-    viewModel: ExchangeRateViewModel = koinInject()
+    viewModel: ExchangeRateViewModel = koinInject(),
+    onFavoriteClick: (String) -> Unit = { currencyCode ->
+        viewModel.toggleFavorite(currencyCode)
+    },
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -182,7 +185,7 @@ fun ExchangeRateScreen(
                         SimpleExchangeRateCard(
                             exchangeRate = exchangeRate,
                             isFavorite = uiState.favoriteIds.contains(exchangeRate.currencyCode),
-                            onFavoriteClick = { viewModel.toggleFavorite(exchangeRate.currencyCode) }
+                            onFavoriteClick = { onFavoriteClick(exchangeRate.currencyCode) }
                         )
                     }
                 }
