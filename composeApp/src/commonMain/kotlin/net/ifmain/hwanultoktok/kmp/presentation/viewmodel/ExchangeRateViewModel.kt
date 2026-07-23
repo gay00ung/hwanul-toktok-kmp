@@ -2,6 +2,8 @@ package net.ifmain.hwanultoktok.kmp.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +22,8 @@ import net.ifmain.hwanultoktok.kmp.domain.usecase.ToggleFavoriteUseCase
 import net.ifmain.hwanultoktok.kmp.presentation.state.ExchangeRateUiState
 import net.ifmain.hwanultoktok.kmp.util.formatDateTime
 import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithoutHoliday
+
+internal const val REFRESH_COOLDOWN_MILLIS = 5_000L
 
 class ExchangeRateViewModel(
     private val getExchangeRatesUseCase: GetExchangeRatesUseCase,
@@ -87,33 +91,62 @@ class ExchangeRateViewModel(
     }
 
     fun refreshExchangeRates() {
+        if (!_uiState.value.canRefresh) return
+
         println("ExchangeRateViewModel: 새로고침 시작")
+        _uiState.update { currentState ->
+            currentState.copy(
+                isRefreshing = true,
+                isRefreshThrottled = true,
+                errorMessage = null,
+            )
+        }
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isRefreshing = true)
+            try {
+                val result = refreshExchangeRatesUseCase()
+                result.fold(
+                    onSuccess = { rates ->
+                        println("ExchangeRateViewModel: 새로고침 성공 - ${rates.size}개 환율")
+                        val updateTime = rates.firstOrNull()?.timestamp
 
-            val result = refreshExchangeRatesUseCase()
-            result.fold(
-                onSuccess = { rates ->
-                    println("ExchangeRateViewModel: 새로고침 성공 - ${rates.size}개 환율")
-                    val updateTime = rates.firstOrNull()?.timestamp
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                exchangeRates = rates,
+                                errorMessage = null,
+                                lastUpdateTime = updateTime,
+                            )
+                        }
 
-                    _uiState.value = _uiState.value.copy(
-                        isRefreshing = false,
-                        exchangeRates = rates,
-                        errorMessage = null,
-                        lastUpdateTime = updateTime
-                    )
-
-                    // 공휴일을 고려한 실제 데이터 기준일 계산
-                    updateTime?.let { updateFormattedDataDate(it) }
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isRefreshing = false,
-                        errorMessage = error.message ?: "새로고침에 실패했습니다"
+                        // 공휴일을 고려한 실제 데이터 기준일 계산
+                        updateTime?.let { updateFormattedDataDate(it) }
+                    },
+                    onFailure = { error ->
+                        _uiState.update { currentState ->
+                            currentState.copy(
+                                errorMessage = error.message ?: "새로고침에 실패했습니다",
+                            )
+                        }
+                    },
+                )
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        errorMessage = error.message ?: "새로고침에 실패했습니다",
                     )
                 }
-            )
+            } finally {
+                _uiState.update { currentState ->
+                    currentState.copy(isRefreshing = false)
+                }
+            }
+
+            delay(REFRESH_COOLDOWN_MILLIS)
+            _uiState.update { currentState ->
+                currentState.copy(isRefreshThrottled = false)
+            }
         }
     }
 

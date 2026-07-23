@@ -45,6 +45,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(libs.androidx.testExt.junit)
                 implementation(libs.androidx.test.runner)
+                implementation("androidx.compose.ui:ui-test-junit4-android:1.9.4")
             }
         }
         val iosX64Main by getting
@@ -205,4 +206,5 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+    debugImplementation("androidx.compose.ui:ui-test-manifest:1.9.4")
 }
