@@ -102,7 +102,7 @@ class AlertViewModel(
     
     fun startBackgroundMonitoring() {
         viewModelScope.launch {
-            scheduleExchangeRateCheckUseCase(15)
+            scheduleExchangeRateCheckUseCase()
         }
     }
 

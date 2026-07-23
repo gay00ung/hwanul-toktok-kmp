@@ -1,12 +1,15 @@
 package net.ifmain.hwanultoktok.kmp.presentation.viewmodel
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.LocalDateTime
@@ -26,6 +29,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExchangeRateViewModelTest {
@@ -106,10 +110,63 @@ class ExchangeRateViewModelTest {
 
             assertFalse(callbackCalled)
         }
+
+    @Test
+    fun refresh_blocks_duplicate_requests_and_keeps_five_second_cooldown_after_completion() =
+        runTest(mainDispatcher) {
+            val refreshResult = CompletableDeferred<Result<List<ExchangeRate>>>()
+            val exchangeRateRepository = FakeExchangeRateRepository(
+                refreshResultOverride = { refreshResult.await() },
+            )
+            val viewModel = ExchangeRateViewModel(
+                getExchangeRatesUseCase = GetExchangeRatesUseCase(exchangeRateRepository),
+                refreshExchangeRatesUseCase = RefreshExchangeRatesUseCase(exchangeRateRepository),
+                getFavoriteUseCase = GetFavoritesUseCase(FakeFavoriteRepository()),
+                toggleFavoriteUseCase = ToggleFavoriteUseCase(FakeFavoriteRepository()),
+                getHolidaysUseCase = GetHolidaysUseCase(FakeHolidayRepository()),
+            )
+
+            viewModel.refreshExchangeRates()
+            viewModel.refreshExchangeRates()
+
+            assertTrue(viewModel.uiState.value.isRefreshing)
+            assertFalse(viewModel.uiState.value.canRefresh)
+
+            runCurrent()
+            assertEquals(1, exchangeRateRepository.refreshExchangeRatesCallCount)
+
+            refreshResult.complete(Result.success(emptyList()))
+            runCurrent()
+
+            assertFalse(viewModel.uiState.value.isRefreshing)
+            assertTrue(viewModel.uiState.value.isRefreshThrottled)
+            assertFalse(viewModel.uiState.value.canRefresh)
+
+            viewModel.refreshExchangeRates()
+            runCurrent()
+            assertEquals(1, exchangeRateRepository.refreshExchangeRatesCallCount)
+
+            advanceTimeBy(REFRESH_COOLDOWN_MILLIS - 1)
+            runCurrent()
+            assertFalse(viewModel.uiState.value.canRefresh)
+
+            advanceTimeBy(1)
+            runCurrent()
+            assertTrue(viewModel.uiState.value.canRefresh)
+
+            viewModel.refreshExchangeRates()
+            advanceUntilIdle()
+
+            assertEquals(2, exchangeRateRepository.refreshExchangeRatesCallCount)
+        }
 }
 
-private class FakeExchangeRateRepository : ExchangeRateRepository {
+private class FakeExchangeRateRepository(
+    private val refreshResultOverride: (suspend () -> Result<List<ExchangeRate>>)? = null,
+) : ExchangeRateRepository {
     var getExchangeRatesCallCount = 0
+        private set
+    var refreshExchangeRatesCallCount = 0
         private set
 
     private val rates = listOf(
@@ -130,7 +187,10 @@ private class FakeExchangeRateRepository : ExchangeRateRepository {
         return flowOf(rates)
     }
 
-    override suspend fun refreshExchangeRates(): Result<List<ExchangeRate>> = Result.success(rates)
+    override suspend fun refreshExchangeRates(): Result<List<ExchangeRate>> {
+        refreshExchangeRatesCallCount += 1
+        return refreshResultOverride?.invoke() ?: Result.success(rates)
+    }
 
     override suspend fun getPreviousExchangeRates(): List<ExchangeRate> = emptyList()
 

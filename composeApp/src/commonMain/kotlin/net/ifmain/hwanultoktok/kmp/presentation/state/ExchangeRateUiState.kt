@@ -13,11 +13,15 @@ data class ExchangeRateUiState(
     ),
     val errorMessage: String? = null,
     val isRefreshing: Boolean = false,
+    val isRefreshThrottled: Boolean = false,
     val favoriteIds: Set<String> = emptySet(),
     val showFavoritesOnly: Boolean = false,
     val lastUpdateTime: LocalDateTime? = null,
     val formattedDataDate: String? = null,
 ) {
+    val canRefresh: Boolean
+        get() = !isLoading && !isRefreshing && !isRefreshThrottled
+
     val filteredExchangeRates: List<ExchangeRate>
         get() = exchangeRates.filter { rate ->
             val isInSelectedCurrencies = selectedCurrencies.contains(rate.currencyCode)
