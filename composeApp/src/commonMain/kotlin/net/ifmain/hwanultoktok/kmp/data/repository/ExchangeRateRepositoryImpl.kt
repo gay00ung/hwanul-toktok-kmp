@@ -1,22 +1,28 @@
 package net.ifmain.hwanultoktok.kmp.data.repository
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import net.ifmain.hwanultoktok.kmp.data.mapper.toDomain
 import net.ifmain.hwanultoktok.kmp.data.remote.KoreaExImBankApi
+import net.ifmain.hwanultoktok.kmp.data.remote.dto.ExchangeRateDto
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRate
 import net.ifmain.hwanultoktok.kmp.domain.repository.ExchangeRateRepository
 import net.ifmain.hwanultoktok.kmp.domain.repository.HolidayRepository
 import net.ifmain.hwanultoktok.kmp.domain.usecase.GetHolidaysUseCase
-import net.ifmain.hwanultoktok.kmp.util.getDataBaseDate
+import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithFallback
 import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithoutHoliday
 import net.ifmain.hwanultoktok.kmp.util.getCurrentDateTime
 
 class ExchangeRateRepositoryImpl(
     private val api: KoreaExImBankApi,
     private val apiKey: String,
-    private val holidayRepository: HolidayRepository
+    private val holidayRepository: HolidayRepository,
+    private val nowProvider: () -> LocalDateTime = ::getCurrentDateTime,
 ) : ExchangeRateRepository {
 
     private var cachedRates: List<ExchangeRate> = emptyList()
@@ -37,24 +43,35 @@ class ExchangeRateRepositoryImpl(
 
     override suspend fun refreshExchangeRates(): Result<List<ExchangeRate>> {
         return try {
-            val now = getCurrentDateTime()
-            
-            // 공휴일을 고려한 정확한 날짜 계산
-            val dataDate = try {
-                getDataBaseDate(now, createGetHolidaysUseCase())
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                // 공휴일 API 실패시 기본 로직으로 fallback
-                println("ExchangeRateRepositoryImpl: 공휴일 API 실패, 기본 로직 사용 - ${e.message}")
-                getDataBaseDateWithoutHoliday(now)
+            val exchangeRates = coroutineScope {
+                val now = nowProvider()
+                val fallbackDate = getDataBaseDateWithoutHoliday(now)
+                val holidayAwareDate = async {
+                    getDataBaseDateWithFallback(now, createGetHolidaysUseCase())
+                }
+
+                var dataDate = fallbackDate
+                var response = getExchangeRateResponse(dataDate)
+
+                if (response.isEmpty()) {
+                    dataDate = holidayAwareDate.await()
+                    if (dataDate != fallbackDate) {
+                        response = getExchangeRateResponse(dataDate)
+                    }
+                } else {
+                    holidayAwareDate.cancel()
+                }
+
+                check(response.isNotEmpty()) {
+                    "조회된 환율 정보가 없습니다."
+                }
+                println(
+                    "ExchangeRateRepositoryImpl: API 응답 받음 - " +
+                        "${response.size}개 데이터 (기준일: $dataDate)",
+                )
+                response.map { it.toDomain() }
             }
-            
-            val searchDate = dataDate.toString().replace("-", "")
-            println("ExchangeRateRepositoryImpl: API 요청 시작 - 날짜: $searchDate (공휴일 고려)")
-            val response = api.getExchangeRates(apiKey, searchDate)
-            println("ExchangeRateRepositoryImpl: API 응답 받음 - ${response.size}개 데이터")
-            val exchangeRates = response.map { it.toDomain() }
+
             cachedRates = exchangeRates
             println("ExchangeRateRepositoryImpl: 데이터 변환 및 캐시 저장 완료")
             Result.success(exchangeRates)
@@ -78,5 +95,16 @@ class ExchangeRateRepositoryImpl(
     // HolidayRepository를 GetHolidaysUseCase로 변환하는 헬퍼 함수
     private fun createGetHolidaysUseCase(): GetHolidaysUseCase {
         return GetHolidaysUseCase(holidayRepository)
+    }
+
+    private suspend fun getExchangeRateResponse(
+        dataDate: LocalDate,
+    ): List<ExchangeRateDto> {
+        val searchDate = dataDate.toString().replace("-", "")
+        println("ExchangeRateRepositoryImpl: API 요청 시작 - 날짜: $searchDate")
+        return api.getExchangeRates(
+            authKey = apiKey,
+            searchDate = searchDate,
+        )
     }
 }

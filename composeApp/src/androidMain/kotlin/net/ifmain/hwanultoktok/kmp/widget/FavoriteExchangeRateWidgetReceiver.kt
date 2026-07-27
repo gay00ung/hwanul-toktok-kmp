@@ -5,16 +5,13 @@ import android.content.Intent
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.updateAll
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
 import net.ifmain.hwanultoktok.kmp.BuildConfig
 import net.ifmain.hwanultoktok.kmp.data.mapper.toDomain
 import net.ifmain.hwanultoktok.kmp.data.remote.KoreaExImBankApi
+import net.ifmain.hwanultoktok.kmp.di.createHttpClient
 import net.ifmain.hwanultoktok.kmp.util.getCurrentDateTime
 import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithoutHoliday
 
@@ -40,16 +37,8 @@ class FavoriteExchangeRateWidgetReceiver : GlanceAppWidgetReceiver() {
 
     private fun refreshWidgetData(context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
+            val httpClient = createHttpClient()
             try {
-                val httpClient = HttpClient {
-                    install(ContentNegotiation) {
-                        json(Json {
-                            ignoreUnknownKeys = true
-                            coerceInputValues = true
-                        })
-                    }
-                }
-
                 val api = KoreaExImBankApi(httpClient)
                 val apiKey = BuildConfig.KOREAEXIM_API_KEY
 
@@ -66,6 +55,8 @@ class FavoriteExchangeRateWidgetReceiver : GlanceAppWidgetReceiver() {
                 e.printStackTrace()
                 // 실패해도 위젯 UI는 업데이트
                 FavoriteExchangeRateWidget().updateAll(context)
+            } finally {
+                httpClient.close()
             }
         }
     }

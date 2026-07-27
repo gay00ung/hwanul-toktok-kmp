@@ -4,6 +4,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -29,6 +30,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -65,6 +67,85 @@ class ExchangeRateViewModelTest {
         assertEquals(1, exchangeRateRepository.getExchangeRatesCallCount)
         assertEquals(1, favoriteRepository.getAllFavoritesCallCount)
     }
+
+    @Test
+    fun initial_load_failure_stops_loading_and_shows_retryable_message() =
+        runTest(mainDispatcher) {
+            val exchangeRateRepository = FakeExchangeRateRepository(
+                loadFlowOverride = {
+                    flow {
+                        throw IllegalStateException("network unavailable")
+                    }
+                },
+            )
+            val viewModel = createViewModel(exchangeRateRepository)
+
+            viewModel.loadExchangeRates()
+            advanceUntilIdle()
+
+            assertFalse(viewModel.uiState.value.isLoading)
+            assertTrue(viewModel.uiState.value.exchangeRates.isEmpty())
+            assertEquals(
+                EXCHANGE_RATE_LOAD_ERROR_MESSAGE,
+                viewModel.uiState.value.errorMessage,
+            )
+            assertTrue(viewModel.uiState.value.canRefresh)
+        }
+
+    @Test
+    fun load_blocks_duplicate_requests_while_initial_request_is_running() =
+        runTest(mainDispatcher) {
+            val loadGate = CompletableDeferred<Unit>()
+            val exchangeRateRepository = FakeExchangeRateRepository(
+                loadFlowOverride = {
+                    flow {
+                        loadGate.await()
+                        emit(sampleExchangeRates())
+                    }
+                },
+            )
+            val viewModel = createViewModel(exchangeRateRepository)
+
+            viewModel.loadExchangeRates()
+            viewModel.loadExchangeRates()
+            runCurrent()
+
+            assertEquals(1, exchangeRateRepository.getExchangeRatesCallCount)
+
+            loadGate.complete(Unit)
+            advanceUntilIdle()
+
+            assertFalse(viewModel.uiState.value.isLoading)
+        }
+
+    @Test
+    fun retry_after_initial_load_failure_requests_rates_again_and_recovers() =
+        runTest(mainDispatcher) {
+            var loadAttempt = 0
+            val exchangeRateRepository = FakeExchangeRateRepository(
+                loadFlowOverride = {
+                    loadAttempt += 1
+                    if (loadAttempt == 1) {
+                        flow {
+                            throw IllegalStateException("network unavailable")
+                        }
+                    } else {
+                        flowOf(sampleExchangeRates())
+                    }
+                },
+            )
+            val viewModel = createViewModel(exchangeRateRepository)
+
+            viewModel.loadExchangeRates()
+            advanceUntilIdle()
+            viewModel.retryExchangeRates()
+            advanceUntilIdle()
+
+            assertEquals(2, exchangeRateRepository.getExchangeRatesCallCount)
+            assertFalse(viewModel.uiState.value.isLoading)
+            assertEquals(sampleExchangeRates(), viewModel.uiState.value.exchangeRates)
+            assertNull(viewModel.uiState.value.errorMessage)
+        }
 
     @Test
     fun toggle_favorite_invokes_success_callback_after_repository_update() = runTest(mainDispatcher) {
@@ -159,32 +240,35 @@ class ExchangeRateViewModelTest {
 
             assertEquals(2, exchangeRateRepository.refreshExchangeRatesCallCount)
         }
+
+    private fun createViewModel(
+        exchangeRateRepository: ExchangeRateRepository,
+    ): ExchangeRateViewModel {
+        val favoriteRepository = FakeFavoriteRepository()
+        return ExchangeRateViewModel(
+            getExchangeRatesUseCase = GetExchangeRatesUseCase(exchangeRateRepository),
+            refreshExchangeRatesUseCase = RefreshExchangeRatesUseCase(exchangeRateRepository),
+            getFavoriteUseCase = GetFavoritesUseCase(favoriteRepository),
+            toggleFavoriteUseCase = ToggleFavoriteUseCase(favoriteRepository),
+            getHolidaysUseCase = GetHolidaysUseCase(FakeHolidayRepository()),
+        )
+    }
 }
 
 private class FakeExchangeRateRepository(
     private val refreshResultOverride: (suspend () -> Result<List<ExchangeRate>>)? = null,
+    private val loadFlowOverride: (suspend () -> Flow<List<ExchangeRate>>)? = null,
 ) : ExchangeRateRepository {
     var getExchangeRatesCallCount = 0
         private set
     var refreshExchangeRatesCallCount = 0
         private set
 
-    private val rates = listOf(
-        ExchangeRate(
-            currencyCode = "USD",
-            currencyName = "미국 달러",
-            currencyUnit = "USD",
-            buyingRate = 1_300.0,
-            sellingRate = 1_400.0,
-            baseRate = 1_350.0,
-            bookPrice = 1_350.0,
-            timestamp = LocalDateTime(2026, 7, 20, 12, 0),
-        )
-    )
+    private val rates = sampleExchangeRates()
 
     override suspend fun getExchangeRates(): Flow<List<ExchangeRate>> {
         getExchangeRatesCallCount += 1
-        return flowOf(rates)
+        return loadFlowOverride?.invoke() ?: flowOf(rates)
     }
 
     override suspend fun refreshExchangeRates(): Result<List<ExchangeRate>> {
@@ -232,3 +316,16 @@ private class FakeHolidayRepository : HolidayRepository {
     override suspend fun getHolidays(year: Int, month: Int): Result<List<HolidayItem>> =
         Result.success(emptyList())
 }
+
+private fun sampleExchangeRates(): List<ExchangeRate> = listOf(
+    ExchangeRate(
+        currencyCode = "USD",
+        currencyName = "미국 달러",
+        currencyUnit = "USD",
+        buyingRate = 1_300.0,
+        sellingRate = 1_400.0,
+        baseRate = 1_350.0,
+        bookPrice = 1_350.0,
+        timestamp = LocalDateTime(2026, 7, 20, 12, 0),
+    ),
+)
