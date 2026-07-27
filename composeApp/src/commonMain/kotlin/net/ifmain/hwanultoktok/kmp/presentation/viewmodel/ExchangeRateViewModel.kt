@@ -7,7 +7,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
@@ -24,6 +23,10 @@ import net.ifmain.hwanultoktok.kmp.util.formatDateTime
 import net.ifmain.hwanultoktok.kmp.util.getDataBaseDateWithoutHoliday
 
 internal const val REFRESH_COOLDOWN_MILLIS = 5_000L
+internal const val EXCHANGE_RATE_LOAD_ERROR_MESSAGE =
+    "환율 정보를 불러오지 못했습니다. 네트워크 연결을 확인한 뒤 다시 시도해주세요."
+internal const val EXCHANGE_RATE_REFRESH_ERROR_MESSAGE =
+    "최신 환율로 새로고침하지 못했습니다. 잠시 후 다시 시도해주세요."
 
 class ExchangeRateViewModel(
     private val getExchangeRatesUseCase: GetExchangeRatesUseCase,
@@ -55,37 +58,47 @@ class ExchangeRateViewModel(
     }
 
     fun loadExchangeRates() {
+        if (_uiState.value.isLoading || _uiState.value.isRefreshing) return
+
         println("ExchangeRateViewModel: loadExchangeRates 호출")
+        _uiState.update { currentState ->
+            currentState.copy(isLoading = true, errorMessage = null)
+        }
+
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-
             try {
-                getExchangeRatesUseCase()
-                    .catch { error ->
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = error.message ?: "알 수 없는 오류가 발생했습니다"
-                        )
-                    }
-                    .collect { rates ->
-                        println("ExchangeRateViewModel: 데이터 수신 - ${rates.size}개 환율")
-                        val updateTime = rates.firstOrNull()?.timestamp
+                var hasEmittedRates = false
+                getExchangeRatesUseCase().collect { rates ->
+                    hasEmittedRates = true
 
-                        _uiState.value = _uiState.value.copy(
+                    if (rates.isEmpty()) {
+                        showLoadFailure()
+                        return@collect
+                    }
+
+                    println("ExchangeRateViewModel: 데이터 수신 - ${rates.size}개 환율")
+                    val updateTime = rates.first().timestamp
+
+                    _uiState.update { currentState ->
+                        currentState.copy(
                             isLoading = false,
                             exchangeRates = rates,
                             errorMessage = null,
-                            lastUpdateTime = updateTime
+                            lastUpdateTime = updateTime,
                         )
-
-                        // 공휴일을 고려한 실제 데이터 기준일 계산
-                        updateTime?.let { updateFormattedDataDate(it) }
                     }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = e.message ?: "알 수 없는 오류가 발생했습니다"
-                )
+
+                    // 공휴일을 고려한 실제 데이터 기준일 계산
+                    updateFormattedDataDate(updateTime)
+                }
+
+                if (!hasEmittedRates) {
+                    showLoadFailure()
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
+                showLoadFailure()
             }
         }
     }
@@ -107,8 +120,17 @@ class ExchangeRateViewModel(
                 val result = refreshExchangeRatesUseCase()
                 result.fold(
                     onSuccess = { rates ->
+                        if (rates.isEmpty()) {
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    errorMessage = EXCHANGE_RATE_REFRESH_ERROR_MESSAGE,
+                                )
+                            }
+                            return@fold
+                        }
+
                         println("ExchangeRateViewModel: 새로고침 성공 - ${rates.size}개 환율")
-                        val updateTime = rates.firstOrNull()?.timestamp
+                        val updateTime = rates.first().timestamp
 
                         _uiState.update { currentState ->
                             currentState.copy(
@@ -119,22 +141,22 @@ class ExchangeRateViewModel(
                         }
 
                         // 공휴일을 고려한 실제 데이터 기준일 계산
-                        updateTime?.let { updateFormattedDataDate(it) }
+                        updateFormattedDataDate(updateTime)
                     },
-                    onFailure = { error ->
+                    onFailure = {
                         _uiState.update { currentState ->
                             currentState.copy(
-                                errorMessage = error.message ?: "새로고침에 실패했습니다",
+                                errorMessage = EXCHANGE_RATE_REFRESH_ERROR_MESSAGE,
                             )
                         }
                     },
                 )
             } catch (error: CancellationException) {
                 throw error
-            } catch (error: Exception) {
+            } catch (_: Exception) {
                 _uiState.update { currentState ->
                     currentState.copy(
-                        errorMessage = error.message ?: "새로고침에 실패했습니다",
+                        errorMessage = EXCHANGE_RATE_REFRESH_ERROR_MESSAGE,
                     )
                 }
             } finally {
@@ -147,6 +169,19 @@ class ExchangeRateViewModel(
             _uiState.update { currentState ->
                 currentState.copy(isRefreshThrottled = false)
             }
+        }
+    }
+
+    fun retryExchangeRates() {
+        val currentState = _uiState.value
+        if (currentState.isLoading || currentState.isRefreshing || currentState.isRefreshThrottled) {
+            return
+        }
+
+        if (currentState.exchangeRates.isEmpty()) {
+            loadExchangeRates()
+        } else {
+            refreshExchangeRates()
         }
     }
 
@@ -189,7 +224,9 @@ class ExchangeRateViewModel(
                 _uiState.update { currentState ->
                     currentState.copy(formattedDataDate = formattedDate)
                 }
-            } catch (e: Exception) {
+            } catch (error: CancellationException) {
+                throw error
+            } catch (_: Exception) {
                 // 공휴일 데이터 로드 실패시 기본 포맷 사용 (공휴일 체크 없이)
                 val dataDate = getDataBaseDateWithoutHoliday(updateTime)
                 val basicFormat =
@@ -202,6 +239,17 @@ class ExchangeRateViewModel(
     }
 
     fun clearError() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
+        _uiState.update { currentState ->
+            currentState.copy(errorMessage = null)
+        }
+    }
+
+    private fun showLoadFailure() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                isLoading = false,
+                errorMessage = EXCHANGE_RATE_LOAD_ERROR_MESSAGE,
+            )
+        }
     }
 }

@@ -7,8 +7,10 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import net.ifmain.hwanultoktok.kmp.domain.model.AlertType
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRateAlert
 import net.ifmain.hwanultoktok.kmp.domain.repository.AlertRepository
@@ -66,7 +68,9 @@ class ExchangeRateWorkExecutorDeviceTest {
         val notificationId = testAlert.id.hashCode()
 
         try {
-            executor.execute()
+            withContext(Dispatchers.Default) {
+                executor.execute()
+            }
 
             val firstNotification = notificationManager.activeNotifications
                 .firstOrNull { it.id == notificationId }
@@ -81,7 +85,9 @@ class ExchangeRateWorkExecutorDeviceTest {
                 .single { it.id == testAlert.id }
             assertFalse(persistedAlert.isArmed)
 
-            executor.execute()
+            withContext(Dispatchers.Default) {
+                executor.execute()
+            }
 
             val secondNotification = notificationManager.activeNotifications
                 .firstOrNull { it.id == notificationId }

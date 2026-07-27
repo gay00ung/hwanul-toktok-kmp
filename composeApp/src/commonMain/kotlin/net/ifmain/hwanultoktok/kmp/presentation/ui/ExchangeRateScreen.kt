@@ -29,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,6 +66,7 @@ fun ExchangeRateScreen(
     ExchangeRateScreen(
         uiState = uiState,
         onRefreshClick = viewModel::refreshExchangeRates,
+        onRetryClick = viewModel::retryExchangeRates,
         onClearErrorClick = viewModel::clearError,
         onToggleFavoritesFilter = viewModel::toggleFavoritesFilter,
         onFavoriteClick = onFavoriteClick,
@@ -76,6 +78,7 @@ fun ExchangeRateScreen(
 internal fun ExchangeRateScreen(
     uiState: ExchangeRateUiState,
     onRefreshClick: () -> Unit,
+    onRetryClick: () -> Unit,
     onClearErrorClick: () -> Unit,
     onToggleFavoritesFilter: () -> Unit,
     onFavoriteClick: (String) -> Unit,
@@ -89,36 +92,13 @@ internal fun ExchangeRateScreen(
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
-            // Error handling
-            uiState.errorMessage?.let { error ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
-                    ),
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "오류",
-                            style = MaterialTheme.typography.titleSmall,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                        )
-                        Text(
-                            text = error,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onErrorContainer,
-                            modifier = Modifier.padding(top = 4.dp),
-                        )
-                        Button(
-                            onClick = onClearErrorClick,
-                            modifier = Modifier.padding(top = 8.dp),
-                        ) {
-                            Text("확인")
-                        }
-                    }
-                }
+            if (uiState.errorMessage != null && uiState.exchangeRates.isNotEmpty()) {
+                ExchangeRateErrorCard(
+                    message = uiState.errorMessage,
+                    retryEnabled = uiState.canRefresh,
+                    onRetryClick = onRetryClick,
+                    onDismissClick = onClearErrorClick,
+                )
             }
 
             // Header with refresh button and favorites toggle
@@ -189,17 +169,21 @@ internal fun ExchangeRateScreen(
                     }
                 }
 
-                uiState.filteredExchangeRates.isEmpty() -> {
-                    Box(
+                uiState.errorMessage != null -> {
+                    ExchangeRateErrorContent(
+                        message = uiState.errorMessage,
+                        retryEnabled = uiState.canRefresh,
+                        onRetryClick = onRetryClick,
                         modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "환율 정보를 불러올 수 없습니다",
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                        )
-                    }
+                    )
+                }
+
+                uiState.filteredExchangeRates.isEmpty() -> {
+                    EmptyExchangeRateContent(
+                        retryEnabled = uiState.canRefresh,
+                        onRetryClick = onRetryClick,
+                        modifier = Modifier.fillMaxSize(),
+                    )
                 }
 
                 else -> {
@@ -229,6 +213,116 @@ internal fun ExchangeRateScreen(
 
         if (uiState.isRefreshing) {
             RefreshLoadingOverlay(modifier = Modifier.fillMaxSize())
+        }
+    }
+}
+
+@Composable
+private fun ExchangeRateErrorCard(
+    message: String,
+    retryEnabled: Boolean,
+    onRetryClick: () -> Unit,
+    onDismissClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+        ),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "환율 정보를 업데이트하지 못했어요",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+            )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+            Row(
+                modifier = Modifier.padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Button(
+                    onClick = onRetryClick,
+                    enabled = retryEnabled,
+                ) {
+                    Text("다시 시도")
+                }
+                TextButton(
+                    onClick = onDismissClick,
+                    modifier = Modifier.padding(start = 8.dp),
+                ) {
+                    Text("닫기")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExchangeRateErrorContent(
+    message: String,
+    retryEnabled: Boolean,
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = "환율 정보를 불러오지 못했어요",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 8.dp),
+        )
+        Button(
+            onClick = onRetryClick,
+            enabled = retryEnabled,
+            modifier = Modifier.padding(top = 16.dp),
+        ) {
+            Text("다시 시도")
+        }
+    }
+}
+
+@Composable
+private fun EmptyExchangeRateContent(
+    retryEnabled: Boolean,
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier.padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        Text(
+            text = "표시할 환율 정보가 없습니다",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+        )
+        Button(
+            onClick = onRetryClick,
+            enabled = retryEnabled,
+            modifier = Modifier.padding(top = 16.dp),
+        ) {
+            Text("다시 시도")
         }
     }
 }

@@ -1,5 +1,7 @@
 package net.ifmain.hwanultoktok.kmp.util
 
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.LocalDate
@@ -11,6 +13,8 @@ import kotlinx.datetime.toLocalDateTime
 import net.ifmain.hwanultoktok.kmp.domain.usecase.GetHolidaysUseCase
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
+
+internal const val HOLIDAY_LOOKUP_TIMEOUT_MILLIS = 5_000L
 
 @OptIn(ExperimentalTime::class)
 fun getCurrentDateTime(): LocalDateTime {
@@ -24,7 +28,7 @@ suspend fun getExchangeRateSearchDate(getHolidaysUseCase: GetHolidaysUseCase): S
     val now = Clock.System.now()
     val koreaTimeZone = TimeZone.of("Asia/Seoul")
     val koreaTime = now.toLocalDateTime(koreaTimeZone)
-    val searchDate = getDataBaseDate(koreaTime, getHolidaysUseCase)
+    val searchDate = getDataBaseDateWithFallback(koreaTime, getHolidaysUseCase)
 
     return searchDate.toString().replace("-", "")
 }
@@ -34,8 +38,24 @@ suspend fun formatDateTime(
     dateTime: LocalDateTime,
     getHolidaysUseCase: GetHolidaysUseCase
 ): String {
-    val dataDate = getDataBaseDate(dateTime, getHolidaysUseCase)
+    val dataDate = getDataBaseDateWithFallback(dateTime, getHolidaysUseCase)
     return "${dataDate.year}년 ${dataDate.month.number}월 ${dataDate.day}일 고시환율"
+}
+
+internal suspend fun getDataBaseDateWithFallback(
+    updateTime: LocalDateTime,
+    getHolidaysUseCase: GetHolidaysUseCase,
+    timeoutMillis: Long = HOLIDAY_LOOKUP_TIMEOUT_MILLIS,
+): LocalDate {
+    return try {
+        withTimeoutOrNull(timeoutMillis) {
+            getDataBaseDate(updateTime, getHolidaysUseCase)
+        } ?: getDataBaseDateWithoutHoliday(updateTime)
+    } catch (error: CancellationException) {
+        throw error
+    } catch (_: Exception) {
+        getDataBaseDateWithoutHoliday(updateTime)
+    }
 }
 
 // 공휴일 체크 없는 기존 로직
