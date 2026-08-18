@@ -16,6 +16,7 @@ Android와 iOS에서 광고 요청이 발생할 수 있는 런타임 경로를 �
 - iOS Google Mobile Ads Swift Package, SDK 초기화, 배너 UI 제거
 - iOS AdMob 앱/광고 단위 ID, 추적 설명, SKAdNetwork 설정 제거
 - 광고 관련 코드나 설정이 다시 들어오면 빌드가 실패하는 `verifyAdsDisabled` 검사 추가
+- Android 릴리스 버전을 versionName 1.0.10 / versionCode 11로 증가
 
 `public/app-ads.txt`는 게시자 소유권을 선언하는 파일이며 광고 요청을 발생시키지
 않으므로 유지했습니다.
@@ -35,7 +36,6 @@ Firebase Analytics의 전이 의존성인 광고 식별자 라이브러리는 �
 
 ## 남은 작업
 
-- Android 버전 코드/이름을 다음 릴리스 버전으로 올리기
 - Play Console에 새 빌드 배포 및 광고 포함 여부를 현재 상태에 맞게 수정
 - 배포 일시와 스토어 처리 완료 화면 보관
 - 배포 완료 후 사실에 근거한 이의신청 제출
