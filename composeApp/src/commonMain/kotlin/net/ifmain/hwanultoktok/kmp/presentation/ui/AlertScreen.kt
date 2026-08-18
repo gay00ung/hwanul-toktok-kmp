@@ -59,7 +59,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import net.ifmain.hwanultoktok.kmp.domain.model.AlertType
 import net.ifmain.hwanultoktok.kmp.domain.model.ExchangeRateAlert
-import net.ifmain.hwanultoktok.kmp.presentation.ads.rememberInterstitialAdController
 import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.AlertViewModel
 import net.ifmain.hwanultoktok.kmp.presentation.viewmodel.ExchangeRateViewModel
 import net.ifmain.hwanultoktok.kmp.util.CurrencyUtils
@@ -76,7 +75,6 @@ fun AlertScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val exchangeRateUiState by exchangeRateViewModel.uiState.collectAsStateWithLifecycle()
     var showAddAlertDialog by remember { mutableStateOf(false) }
-    val interstitialController = rememberInterstitialAdController()
     val currencyUnitsByCode = exchangeRateUiState.exchangeRates.associate { rate ->
         rate.currencyCode to rate.currencyUnit
     }
@@ -223,28 +221,12 @@ fun AlertScreen(
         }
     }
 
-    LaunchedEffect(showAddAlertDialog) {
-        if (showAddAlertDialog) {
-            interstitialController?.preload()
-        }
-    }
-
     if (showAddAlertDialog) {
         AddAlertDialog(
             onDismiss = { showAddAlertDialog = false },
             onConfirm = { currencyCode, alertType, targetRate ->
                 showAddAlertDialog = false
-                val proceed = {
-                    viewModel.addAlert(currencyCode, alertType, targetRate)
-                }
-                val controller = interstitialController
-                if (controller != null) {
-                    controller.show {
-                        proceed()
-                    }
-                } else {
-                    proceed()
-                }
+                viewModel.addAlert(currencyCode, alertType, targetRate)
             },
             viewModel = exchangeRateViewModel,
         )

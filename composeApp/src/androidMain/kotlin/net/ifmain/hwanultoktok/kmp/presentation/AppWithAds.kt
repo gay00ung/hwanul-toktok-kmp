@@ -1,10 +1,8 @@
 package net.ifmain.hwanultoktok.kmp.presentation
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -32,13 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import net.ifmain.hwanultoktok.kmp.domain.service.NotificationService
-import net.ifmain.hwanultoktok.kmp.presentation.components.AdBanner
 import net.ifmain.hwanultoktok.kmp.presentation.theme.HwanulTheme
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppWithBottomAd() {
+fun AppWithBottomNavigation() {
     HwanulTheme {
         val notificationService: NotificationService = koinInject()
 
@@ -85,38 +82,32 @@ fun AppWithBottomAd() {
                 )
             },
             bottomBar = {
-                Column {
-                    AdBanner(
-                        modifier = Modifier.fillMaxWidth()
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.height(56.dp)
+                ) {
+                    NavigationBarItem(
+                        selected = selectedTabIndex == 0,
+                        onClick = { selectedTabIndex = 0 },
+                        icon = {
+                            Icon(
+                                Icons.Default.AttachMoney,
+                                contentDescription = "환율"
+                            )
+                        },
+                        label = { Text("환율") }
                     )
-
-                    NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        modifier = Modifier.height(56.dp)
-                    ) {
-                        NavigationBarItem(
-                            selected = selectedTabIndex == 0,
-                            onClick = { selectedTabIndex = 0 },
-                            icon = {
-                                Icon(
-                                    Icons.Default.AttachMoney,
-                                    contentDescription = "환율"
-                                )
-                            },
-                            label = { Text("환율") }
-                        )
-                        NavigationBarItem(
-                            selected = selectedTabIndex == 1,
-                            onClick = { selectedTabIndex = 1 },
-                            icon = {
-                                Icon(
-                                    Icons.Default.Notifications,
-                                    contentDescription = "알림"
-                                )
-                            },
-                            label = { Text("알림") }
-                        )
-                    }
+                    NavigationBarItem(
+                        selected = selectedTabIndex == 1,
+                        onClick = { selectedTabIndex = 1 },
+                        icon = {
+                            Icon(
+                                Icons.Default.Notifications,
+                                contentDescription = "알림"
+                            )
+                        },
+                        label = { Text("알림") }
+                    )
                 }
             }
         ) { paddingValues ->

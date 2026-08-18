@@ -15,14 +15,10 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
-import com.google.android.gms.ads.MobileAds
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import net.ifmain.hwanultoktok.kmp.alarm.ExchangeRateAlarmScheduler
 import net.ifmain.hwanultoktok.kmp.di.commonModule
 import net.ifmain.hwanultoktok.kmp.di.platformModule
-import net.ifmain.hwanultoktok.kmp.presentation.AppWithBottomAd
+import net.ifmain.hwanultoktok.kmp.presentation.AppWithBottomNavigation
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 
@@ -53,12 +49,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        
-        // AdMob 초기화
-        CoroutineScope(Dispatchers.IO).launch {
-            MobileAds.initialize(this@MainActivity) {}
-        }
-        
+
         try {
             setContent {
                 AppWithAds()
@@ -128,7 +119,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppWithAds() {
-    AppWithBottomAd()
+    AppWithBottomNavigation()
 }
 
 @Preview

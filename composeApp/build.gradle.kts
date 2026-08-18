@@ -67,7 +67,6 @@ kotlin {
             implementation(libs.koin.androidx.compose)
             implementation(libs.sqldelight.android.driver)
             implementation(libs.androidx.work.runtime.ktx)
-            implementation(libs.play.services.ads)
             implementation(libs.guava)
 
             // Firebase
@@ -141,8 +140,8 @@ android {
         applicationId = "net.ifmain.hwanultoktok.kmp"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 10
-        versionName = "1.0.9"
+        versionCode = 11
+        versionName = "1.0.10"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
         // Load API key from local.properties
@@ -153,19 +152,6 @@ android {
         }
         val apiKey = localProperties.getProperty("KOREAEXIM_API_KEY") ?: "YOUR_API_KEY_HERE"
         buildConfigField("String", "KOREAEXIM_API_KEY", "\"$apiKey\"")
-        
-        // AdMob App ID from local.properties
-        val admobAppId = localProperties.getProperty("ADMOB_APP_ID") ?: "YOUR_ADMOB_APP_ID_HERE"
-        buildConfigField("String", "ADMOB_APP_ID", "\"$admobAppId\"")
-        manifestPlaceholders["admobAppId"] = admobAppId
-        
-        // AdMob Banner Unit ID from local.properties
-        val admobBannerId = localProperties.getProperty("ADMOB_BANNER_ID") ?: "ca-app-pub-3940256099942544/9214589741"
-        buildConfigField("String", "ADMOB_BANNER_ID", "\"$admobBannerId\"")
-
-        // AdMob Interstitial Unit ID from local.properties
-        val admobInterstitialId = localProperties.getProperty("ADMOB_INTERSTITIAL_ID") ?: "ca-app-pub-3940256099942544/1033173712"
-        buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"$admobInterstitialId\"")
 
         // Korea Holiday API keys from local.properties
         val holidayApiKeyEncoding = localProperties.getProperty("KOREA_HOLIDAY_API_KEY_ENCODING") ?: localProperties.getProperty("KOREA_HOLIDAY_API_KEY_DECODING")
@@ -207,4 +193,22 @@ android {
 dependencies {
     debugImplementation(compose.uiTooling)
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.9.4")
+}
+
+val verifyAdsDisabled by tasks.registering(Exec::class) {
+    group = "verification"
+    description = "Fails when a Google Mobile Ads request path is reintroduced."
+    workingDir(rootProject.projectDir)
+    commandLine(
+        "bash",
+        rootProject.file("scripts/verify_ads_disabled.sh").absolutePath,
+    )
+}
+
+tasks.named("preBuild") {
+    dependsOn(verifyAdsDisabled)
+}
+
+tasks.named("check") {
+    dependsOn(verifyAdsDisabled)
 }

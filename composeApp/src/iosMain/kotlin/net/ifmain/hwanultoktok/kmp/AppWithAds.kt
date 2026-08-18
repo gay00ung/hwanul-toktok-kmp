@@ -17,8 +17,6 @@ import net.ifmain.hwanultoktok.kmp.presentation.ui.AlertScreen
 import net.ifmain.hwanultoktok.kmp.presentation.ui.ExchangeRateScreen
 import net.ifmain.hwanultoktok.kmp.di.commonModule
 import net.ifmain.hwanultoktok.kmp.di.platformModule
-import net.ifmain.hwanultoktok.kmp.ui.AdMobBanner
-import net.ifmain.hwanultoktok.kmp.platform.ApiKeyProvider
 import org.koin.compose.KoinApplication
 import org.koin.compose.koinInject
 
@@ -73,29 +71,22 @@ actual fun AppWithAds(modifier: Modifier) {
                     )
                 },
                 bottomBar = {
-                    Column {
-                        AdMobBanner(
-                            modifier = Modifier.fillMaxWidth(),
-                            adUnitId = ApiKeyProvider.getAdMobBannerId()
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.height(56.dp)
+                    ) {
+                        NavigationBarItem(
+                            selected = selectedTabIndex == 0,
+                            onClick = { selectedTabIndex = 0 },
+                            icon = { Icon(Icons.Default.AttachMoney, contentDescription = "환율") },
+                            label = { Text("환율") }
                         )
-                        
-                        NavigationBar(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            modifier = Modifier.height(56.dp)
-                        ) {
-                            NavigationBarItem(
-                                selected = selectedTabIndex == 0,
-                                onClick = { selectedTabIndex = 0 },
-                                icon = { Icon(Icons.Default.AttachMoney, contentDescription = "환율") },
-                                label = { Text("환율") }
-                            )
-                            NavigationBarItem(
-                                selected = selectedTabIndex == 1,
-                                onClick = { selectedTabIndex = 1 },
-                                icon = { Icon(Icons.Default.Notifications, contentDescription = "알림") },
-                                label = { Text("알림") }
-                            )
-                        }
+                        NavigationBarItem(
+                            selected = selectedTabIndex == 1,
+                            onClick = { selectedTabIndex = 1 },
+                            icon = { Icon(Icons.Default.Notifications, contentDescription = "알림") },
+                            label = { Text("알림") }
+                        )
                     }
                 }
             ) { paddingValues ->
