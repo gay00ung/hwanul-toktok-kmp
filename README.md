@@ -15,7 +15,7 @@
   - 실시간 환율 정보 조회
   - 맞춤형 환율 알림 설정
   - 백그라운드 환율 모니터링
-  - AdMob 광고 통합
+  - 광고 없는 사용자 경험
   - 다크/라이트 테마 지원
 
 ---
@@ -35,15 +35,12 @@
 ### 🔧 Platform Specific
 **Android:**
 - **WorkManager**: 백그라운드 작업 스케줄링
-- **AdMob**: 광고 통합
 - **Material 3**: 디자인 시스템
 
 **iOS:**
 - **Background Tasks**: 백그라운드 환율 체크
 - **User Notifications**: 로컬 알림
-- **AdMob**: 광고 통합
-- **ATT (App Tracking Transparency)**: 광고 추적 권한
-- **SwiftUI**: iOS 네이티브 UI (광고 컴포넌트)
+- **SwiftUI**: iOS 네이티브 앱 컨테이너
 
 ### 📊 데이터 소스
 - **한국수출입은행 환율 API**: 공식 환율 데이터 제공
@@ -87,8 +84,7 @@ hwanul-toktok-kmp/
 │   ├── iosApp/
 │   │   ├── iOSApp.swift         # iOS 앱 진입점
 │   │   ├── AppDelegate.swift    # 백그라운드 태스크
-│   │   ├── ContentView.swift    # 메인 SwiftUI 뷰
-│   │   └── AdBannerView.swift   # 광고 배너 컴포넌트
+│   │   └── ContentView.swift    # 메인 SwiftUI 뷰
 │   └── iosApp.xcodeproj/
 └── gradle/
     └── libs.versions.toml        # 의존성 버전 관리
@@ -154,7 +150,6 @@ hwanul-toktok-kmp/
 이 프로젝트는 Apache License 2.0 하에 배포됩니다. 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
 
 ---
-
 
 
 

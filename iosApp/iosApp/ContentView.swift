@@ -22,17 +22,8 @@ struct ContentView: View {
             
             ComposeView()
                 .ignoresSafeArea(.keyboard)
-            
-            VStack {
-                Spacer()
-                AdBannerView()
-                    .frame(width: 320, height: 50)
-                    .background(Color.clear)
-                    .padding(.bottom, 56)
-            }
         }
     }
 }
-
 
 

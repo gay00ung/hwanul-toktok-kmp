@@ -23,7 +23,6 @@ kotlinx-datetime = "0.7.1"
 koin = "4.1.1"
 koin-androidx-compose = "1.2.0"
 koin-compose = "1.2.0"
-playServicesAds = "24.7.0"
 sqldelight = "2.1.0"
 statelyCommon = "2.1.1"
 workRuntimeKtx = "2.11.0"
@@ -75,7 +74,6 @@ koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
 koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
 
 # Database
-play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 sqldelight-android-driver = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }

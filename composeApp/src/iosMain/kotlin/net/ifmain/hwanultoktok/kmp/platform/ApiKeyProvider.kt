@@ -12,9 +12,4 @@ object ApiKeyProvider {
         return NSBundle.mainBundle.objectForInfoDictionaryKey("KOREA_HOLIDAY_API_KEY_ENCODING") as? String
             ?: "KOREA_HOLIDAY_API_KEY_DECODING"
     }
-    
-    fun getAdMobBannerId(): String {
-        return NSBundle.mainBundle.objectForInfoDictionaryKey("ADMOB_BANNER_ID") as? String
-            ?: "ca-app-pub-3940256099942544/2435281174" // iOS test banner ID as fallback
-    }
 }
