@@ -25,7 +25,7 @@ koin-androidx-compose = "1.2.0"
 koin-compose = "1.2.0"
 sqldelight = "2.1.0"
 statelyCommon = "2.1.1"
-workRuntimeKtx = "2.11.0"
+workRuntimeKtx = "2.11.2"
 
 [libraries]
 androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "glanceMaterial3" }
